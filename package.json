@@ -1,0 +1,41 @@
+{
+  "name": "ghosts-of-lives-past",
+  "version": "0.1.0",
+  "description": "The Unlived Lives: a spatial multi agent simulation of the lives that could have been lived.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caitycroft/GHOSTSofLivesPast_MultiAgentSimulation.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/caitycroft/GHOSTSofLivesPast_MultiAgentSimulation/issues"
+  },
+  "homepage": "https://github.com/caitycroft/GHOSTSofLivesPast_MultiAgentSimulation#readme",
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.186.1",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  },
+  "devDependencies": {
+    "@types/geojson": "^7946.0.16",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@types/three": "^0.186.0",
+    "@types/topojson-client": "^3.1.5",
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21"
+  },
+  "private": true,
+  "type": "module"
+}
