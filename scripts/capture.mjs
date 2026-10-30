@@ -206,7 +206,7 @@ for (let f = 0; f < frames; f++) {
   if (f % 15 === 0) await cdp.send('Animation.setPlaybackRate', { playbackRate: Math.min(1, frameMs / realPerFrame) })
 
   await page.clock.runFor(frameMs)
-  const buf = await page.screenshot({ type: 'jpeg', quality: 92 })
+  const buf = await page.screenshot({ type: 'jpeg', quality: 92, timeout: 180000 })
   if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once('drain', r))
 
   const now = Date.now()
