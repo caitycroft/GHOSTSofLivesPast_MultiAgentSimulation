@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/caitycroft/GHOSTSofLivesPast_MultiAgentSimulation#readme",
   "dependencies": {
+    "@fontsource/press-start-2p": "^5.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "three": "^0.186.1",

@@ -45,3 +45,8 @@ export function useClock<T>(select: (s: ClockState) => T): T {
 }
 
 export const useYear = () => useClock((s) => Math.floor(s.t))
+
+// Capture hook: scripts/capture.mjs drives the clock directly when ?capture=1
+if (new URLSearchParams(window.location.search).has('capture')) {
+  ;(window as unknown as { __clock: typeof clock }).__clock = clock
+}

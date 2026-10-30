@@ -29,7 +29,34 @@ Vercel detects Vite automatically. Output is `dist/`.
 | 4 | Split | Two selves side by side on the same clock. |
 | 5 | Dashboard | Live Earth, cast city weather, industry weather heatmap with receipts on hover, raw attention and macro signals, the selves this year, path distributions, source status. |
 
-Space plays and pauses, arrow keys step a year, Escape clears focus.
+Keys: Space plays and pauses, arrow keys step a year, 1 to 5 switch views, O / F / T pick the camera, V toggles Void mode, H hides the interface (cinema), Escape clears focus.
+
+URL flags: `?style=void`, `?cinema=1`, `?view=loom`, `?mode=tour`, `?speed=0.3`.
+
+## Void mode
+
+A toggle (top right, or V) that turns the whole piece into a retro console. The globe renders through a post pass that drops it into pixel blocks, ordered dithers it to a four colour palette, and adds scanlines and a slight CRT bulge; saturated light such as the threads keeps its hue. Each era becomes a stage with its own palette: amber monitor, CGA, handheld green, synth grid, white phosphor, green phosphor. The loom renders at half resolution and upscales pixelated, city rings become hexagons, the chorus line types out like a game dialogue box under a HUD, and the interface switches to a pixel font (Press Start 2P, bundled locally). The default cyanotype look stays in Arial.
+
+## Walkthrough videos
+
+`scripts/capture.mjs` records frame accurate videos on a virtual clock, so motion is smooth even on a slow machine. Two presets:
+
+- `technical`: 16:9 with captions, every view, receipts on hover, Void mode at the end.
+- `artsy`: 9:16 for Reels, interface hidden, tour camera, the look flipping between cyanotype and Void at each era.
+
+```bash
+npm run build && npx vite preview --port 4173
+```
+
+```bash
+node scripts/capture.mjs --preset technical --out media/technical.mp4
+```
+
+```bash
+node scripts/capture.mjs --preset artsy --out media/artsy.mp4
+```
+
+Needs ffmpeg and Playwright Chromium (`npx playwright install chromium`). Add `--software` on a machine without a GPU. Record on a machine with open internet so the live feeds show up in the cut.
 
 ## Real world data
 

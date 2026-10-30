@@ -22,6 +22,9 @@ export interface Era {
   line: string
   // Light: the whole scene is tinted by these (PRD 4.1, weather as light)
   light: { key: string; fill: string; ground: string; grain: number }
+  // Void mode: each era is a console generation with a four colour palette,
+  // darkest to brightest. Palettes switch hard at era boundaries, like a stage.
+  retro: { name: string; palette: [string, string, string, string] }
   // Baseline growth per industry, -1 (shrinking) to 1 (growing)
   weather: Record<IndustryId, number>
 }
@@ -31,36 +34,42 @@ export const ERAS: Era[] = [
     id: 'film', label: 'The film and entertainment years', start: 2008, end: 2015,
     line: 'Stories were sold by the reel and the box office still set the weather.',
     light: { key: '#ffcf8a', fill: '#ff9a52', ground: '#120a06', grain: 0.11 },
+    retro: { name: 'Amber monitor', palette: ['#000000', '#3d1f00', '#c47a00', '#ffc23d'] },
     weather: { film: 0.6, platforms: 0.4, xr: -0.2, web3: -0.6, ai: -0.3, worldmodels: -0.8, local: 0.1 },
   },
   {
     id: 'platform', label: 'The platform years', start: 2015, end: 2020,
     line: 'The feed became the theater and the algorithm became the studio.',
     light: { key: '#9fd8ff', fill: '#4f8dff', ground: '#040914', grain: 0.07 },
+    retro: { name: 'CGA', palette: ['#000000', '#7a1fa2', '#22c7d6', '#f4f4ff'] },
     weather: { film: 0.1, platforms: 0.8, xr: 0.3, web3: 0.0, ai: 0.2, worldmodels: -0.5, local: 0.1 },
   },
   {
     id: 'pandemic', label: 'The pandemic', start: 2020, end: 2022,
     line: 'Every room closed and every screen opened.',
     light: { key: '#c9ccd1', fill: '#8b9097', ground: '#0a0b0d', grain: 0.16 },
+    retro: { name: 'Handheld', palette: ['#000000', '#1f3b1f', '#7fa31a', '#c8e89a'] },
     weather: { film: -0.7, platforms: 0.6, xr: 0.3, web3: 0.4, ai: 0.2, worldmodels: -0.3, local: -0.8 },
   },
   {
     id: 'decentral', label: 'The decentralized and metaverse wave', start: 2021, end: 2023,
     line: 'Everyone was promised a piece of a world that had not been built yet.',
     light: { key: '#ff6bff', fill: '#38f3ff', ground: '#0b0418', grain: 0.09 },
+    retro: { name: 'Synth grid', palette: ['#000000', '#4b0f7a', '#ff2fd0', '#38f3ff'] },
     weather: { film: -0.1, platforms: 0.1, xr: 0.6, web3: 0.9, ai: 0.3, worldmodels: 0.0, local: 0.0 },
   },
   {
     id: 'ai', label: 'The AI years', start: 2023, end: 2026,
     line: 'Language learned to answer back and the money followed it.',
     light: { key: '#f2f7ff', fill: '#b9d4ff', ground: '#05070c', grain: 0.05 },
+    retro: { name: 'White phosphor', palette: ['#000000', '#262c38', '#9aa6b8', '#f5f8ff'] },
     weather: { film: -0.3, platforms: -0.1, xr: -0.3, web3: -0.7, ai: 1.0, worldmodels: 0.5, local: 0.0 },
   },
   {
     id: 'worldmodels', label: 'The world model and simulation years', start: 2026, end: 2031,
     line: 'Machines started dreaming in places, and places started remembering people.',
     light: { key: '#ffe2d4', fill: '#ffb3c7', ground: '#0c0710', grain: 0.06 },
+    retro: { name: 'Green phosphor', palette: ['#000000', '#063d22', '#2fe07f', '#d9ffe9'] },
     weather: { film: 0.1, platforms: -0.1, xr: 0.4, web3: -0.3, ai: 0.7, worldmodels: 1.0, local: 0.1 },
   },
 ]

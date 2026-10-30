@@ -53,6 +53,7 @@ const landVert = /* glsl */ `
 const landFrag = /* glsl */ `
   uniform vec3 uKey;
   uniform vec3 uFill;
+  uniform float uVoid;
   varying float vLight;
   varying float vLand;
   varying float vFront;
@@ -60,14 +61,16 @@ const landFrag = /* glsl */ `
   void main() {
     vec2 c = gl_PointCoord - 0.5;
     float r = length(c);
-    if (r > 0.5) discard;
-    float soft = smoothstep(0.5, 0.0, r);
+    if (r > 0.5 && uVoid < 0.5) discard;
+    // Void mode draws hard square pixels instead of soft dots
+    float soft = mix(smoothstep(0.5, 0.0, r), 1.0, uVoid);
     vec3 day = mix(uFill, uKey, 0.55 + 0.45 * vLight);
     vec3 night = uFill * 0.38;
     vec3 col = mix(night, day, vLight);
     col = mix(uFill * 0.22 * (0.4 + vLight), col, vLand);
     col += vec3(1.0) * vFront * 1.6;
     float a = soft * vAlpha * mix(0.22, 0.72, vLand) * (0.55 + 0.45 * vLight);
+    a = mix(a, step(0.5, vAlpha) * mix(0.3, 1.0, vLand) * (0.35 + 0.65 * vLight), uVoid);
     gl_FragColor = vec4(col * (0.55 + 0.45 * vLand), a);
   }
 `
@@ -243,6 +246,73 @@ const FinishShader = {
   `,
 }
 
+// Void mode: pixel blocks, ordered dither to the era's four colour console
+// palette (saturated light such as the threads keeps its hue), scanlines and
+// a slight CRT bulge.
+const RetroShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    uRes: { value: new THREE.Vector2(1, 1) },
+    uBlock: { value: 3 },
+    uTime: { value: 0 },
+    uP0: { value: new THREE.Color('#000000') },
+    uP1: { value: new THREE.Color('#333333') },
+    uP2: { value: new THREE.Color('#999999') },
+    uP3: { value: new THREE.Color('#ffffff') },
+  },
+  vertexShader: /* glsl */ `
+    varying vec2 vUv;
+    void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+  `,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    uniform vec2 uRes;
+    uniform float uBlock;
+    uniform float uTime;
+    uniform vec3 uP0;
+    uniform vec3 uP1;
+    uniform vec3 uP2;
+    uniform vec3 uP3;
+    varying vec2 vUv;
+    float bayer2(vec2 p) {
+      p = mod(p, 2.0);
+      return p.x < 0.5 ? (p.y < 0.5 ? 0.0 : 3.0) : (p.y < 0.5 ? 2.0 : 1.0);
+    }
+    float bayer4(vec2 p) {
+      // 4x4 ordered dither built from the 2x2 matrix
+      return (4.0 * bayer2(p) + bayer2(floor(p / 2.0))) / 16.0;
+    }
+    vec2 bulge(vec2 uv) {
+      uv = uv * 2.0 - 1.0;
+      vec2 off = abs(uv.yx) / vec2(7.0, 5.5);
+      uv = uv + uv * off * off;
+      return uv * 0.5 + 0.5;
+    }
+    void main() {
+      vec2 uv = bulge(vUv);
+      if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) { gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
+      vec2 px = uv * uRes;
+      vec2 cell = floor(px / uBlock);
+      vec3 c = texture2D(tDiffuse, (cell + 0.5) * uBlock / uRes).rgb;
+      vec3 g = pow(max(c, 0.0), vec3(1.0 / 2.2));
+      float th = bayer4(cell) - 0.5;
+      float l = dot(g, vec3(0.299, 0.587, 0.114));
+      float idx = floor(clamp(l * 3.6 - 0.18 + th * 0.95, 0.0, 3.0) + 0.5);
+      vec3 pal = idx < 0.5 ? uP0 : idx < 1.5 ? uP1 : idx < 2.5 ? uP2 : uP3;
+      vec3 q = pow(clamp(floor(g * 3.0 + th + 0.5) / 3.0, 0.0, 1.0), vec3(2.2));
+      float sat = max(max(g.r, g.g), g.b) - min(min(g.r, g.g), g.b);
+      vec3 col = mix(pal, q, smoothstep(0.28, 0.55, sat));
+      float row = mod(px.y, uBlock);
+      col *= 1.0 - step(uBlock - max(1.0, uBlock * 0.34), row) * 0.5;
+      float d = length(vUv - 0.5);
+      col *= smoothstep(0.95, 0.35, d) * (0.97 + 0.03 * sin(uTime * 50.0));
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+}
+
+export type VisualStyle = 'cyanotype' | 'void'
+
 // ---------------------------------------------------------------- scene
 interface ThreadObj {
   selfId: string
@@ -260,6 +330,10 @@ export class GlobeScene {
   composer: EffectComposer
   bloom: UnrealBloomPass
   finish: ShaderPass
+  retro: ShaderPass
+  style: VisualStyle = 'cyanotype'
+  private ringRound = new THREE.RingGeometry(0.86, 1, 64)
+  private ringHex = new THREE.RingGeometry(0.78, 1, 6)
   world = new THREE.Group()
   overlay: HTMLDivElement
 
@@ -291,6 +365,9 @@ export class GlobeScene {
   private ro: ResizeObserver
   private pointerDown = false
   private active = true
+  // Capture renders once per video frame; the browser rAF fires twice
+  private minFrameMs = new URLSearchParams(window.location.search).has('capture') ? 25 : 0
+  private lastRender = -Infinity
 
   mode: CameraMode = 'orbit'
   focusId: string | null = null
@@ -370,6 +447,9 @@ export class GlobeScene {
     this.composer.addPass(this.bloom)
     this.finish = new ShaderPass(FinishShader)
     this.composer.addPass(this.finish)
+    this.retro = new ShaderPass(RetroShader)
+    this.retro.enabled = false
+    this.composer.addPass(this.retro)
     this.composer.addPass(new OutputPass())
 
     this.ro = new ResizeObserver(() => this.resize())
@@ -427,6 +507,7 @@ export class GlobeScene {
         uSun: { value: this.sunDir },
         uKey: { value: new THREE.Color('#ffcf8a') },
         uFill: { value: new THREE.Color('#4f8dff') },
+        uVoid: { value: this.style === 'void' ? 1 : 0 },
       },
       transparent: true,
       depthWrite: false,
@@ -593,6 +674,17 @@ export class GlobeScene {
     this.sunSprite.geometry.getAttribute('aColor').needsUpdate = true
   }
 
+  setStyle(style: VisualStyle) {
+    this.style = style
+    const v = style === 'void'
+    this.finish.enabled = !v
+    this.retro.enabled = v
+    this.bloom.strength = v ? 0.55 : 0.8
+    this.bloom.threshold = v ? 0.25 : 0.18
+    if (this.land) this.land.material.uniforms.uVoid.value = v ? 1 : 0
+    for (const r of this.rings) r.mesh.geometry = v ? this.ringHex : this.ringRound
+  }
+
   setActive(on: boolean) {
     if (on === this.active) return
     this.active = on
@@ -678,7 +770,7 @@ export class GlobeScene {
   private makeCityRings() {
     for (const p of PLACES) {
       const mesh = new THREE.Mesh(
-        new THREE.RingGeometry(0.86, 1, 64),
+        this.ringRound,
         new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }),
       )
       const d = latLonToVec3(p.lat, p.lon, 1.004)
@@ -708,6 +800,8 @@ export class GlobeScene {
     this.composer.setSize(w, h)
     this.bloom.setSize(w, h)
     this.camera.aspect = w / h
+    // Portrait screens keep the horizontal field of view, so the globe still fits
+    this.camera.fov = w < h ? (2 * Math.atan(Math.tan((19 * Math.PI) / 180) / (w / h)) * 180) / Math.PI : 38
     this.camera.updateProjectionMatrix()
   }
 
@@ -737,6 +831,9 @@ export class GlobeScene {
   private loop = () => {
     this.raf = requestAnimationFrame(this.loop)
     if (!this.active) return
+    const nowMs = performance.now()
+    if (nowMs - this.lastRender < this.minFrameMs) return
+    this.lastRender = nowMs
     const dt = Math.min(0.05, this.clock.getDelta())
     const time = this.clock.elapsedTime
     const t = this.year
@@ -750,23 +847,46 @@ export class GlobeScene {
       u.uBuild.value = buildEase * 1.02
       u.uTime.value = time
     }
-    if (this.coast) this.coast.material.opacity = Math.max(0, (this.build - 0.6) / 0.4) * 0.28
+    const isVoid = this.style === 'void'
+    const coastIn = Math.max(0, (this.build - 0.6) / 0.4)
 
-    // Era light
+    // Era light. In void mode the palette snaps per era, like a new stage.
     const { a, b, k } = eraBlend(t)
-    const key = new THREE.Color(a.light.key).lerp(new THREE.Color(b.light.key), k)
-    const fill = new THREE.Color(a.light.fill).lerp(new THREE.Color(b.light.fill), k)
-    const ground = new THREE.Color(a.light.ground).lerp(new THREE.Color(b.light.ground), k)
+    let key: THREE.Color, fill: THREE.Color, ground: THREE.Color
+    if (isVoid) {
+      const pal = (k < 0.5 ? a : b).retro.palette.map((h) => new THREE.Color(h))
+      key = pal[3]
+      fill = pal[2]
+      ground = pal[0]
+      this.retro.uniforms.uP0.value.copy(pal[0])
+      this.retro.uniforms.uP1.value.copy(pal[1])
+      this.retro.uniforms.uP2.value.copy(pal[2])
+      this.retro.uniforms.uP3.value.copy(pal[3])
+      this.retro.uniforms.uTime.value = time
+      const size = this.renderer.getDrawingBufferSize(new THREE.Vector2())
+      this.retro.uniforms.uRes.value.copy(size)
+      this.retro.uniforms.uBlock.value = Math.max(2, Math.round((size.x / this.pixel > 1700 ? 4 : 3) * this.pixel))
+      this.atmo.material.uniforms.uColor.value.copy(pal[1])
+      this.grat.material.color.copy(pal[2])
+    } else {
+      key = new THREE.Color(a.light.key).lerp(new THREE.Color(b.light.key), k)
+      fill = new THREE.Color(a.light.fill).lerp(new THREE.Color(b.light.fill), k)
+      ground = new THREE.Color(a.light.ground).lerp(new THREE.Color(b.light.ground), k)
+      this.atmo.material.uniforms.uColor.value.copy(fill)
+      this.grat.material.color.copy(fill)
+    }
     if (this.land) {
       this.land.material.uniforms.uKey.value.copy(key)
       this.land.material.uniforms.uFill.value.copy(fill)
     }
-    this.atmo.material.uniforms.uColor.value.copy(fill)
-    this.atmo.material.uniforms.uStrength.value = 0.6 * this.build
-    this.core.material.color.copy(ground)
-    this.renderer.setClearColor(ground.clone().multiplyScalar(0.35))
-    this.grat.material.opacity = 0.05 * this.build
-    this.grat.material.color.copy(fill)
+    if (this.coast) {
+      this.coast.material.opacity = coastIn * (isVoid ? 0.6 : 0.28)
+      this.coast.material.color.copy(isVoid ? key : new THREE.Color('#ffffff'))
+    }
+    this.atmo.material.uniforms.uStrength.value = (isVoid ? 0.35 : 0.6) * this.build
+    this.core.material.color.copy(isVoid ? new THREE.Color('#000000') : ground)
+    this.renderer.setClearColor(isVoid ? new THREE.Color('#000000') : ground.clone().multiplyScalar(0.35))
+    this.grat.material.opacity = (isVoid ? 0.2 : 0.05) * this.build
     this.finish.uniforms.uTime.value = time
     this.finish.uniforms.uGrain.value = (a.light.grain * (1 - k) + b.light.grain * k) * 0.35
     this.finish.uniforms.uTint.value.copy(key)
@@ -812,7 +932,7 @@ export class GlobeScene {
       const target = occupied.has(r.id) ? 0.7 : 0.16
       r.glow += (target - r.glow) * (1 - Math.exp(-dt * 4))
       r.mesh.material.opacity = r.glow * reveal
-      r.mesh.material.color.copy(key).lerp(new THREE.Color('#ffffff'), 0.5)
+      r.mesh.material.color.copy(key).lerp(new THREE.Color('#ffffff'), isVoid ? 0 : 0.5)
       r.label.classList.toggle('on', occupied.has(r.id))
       this.place(r.label, r.mesh.position, reveal > 0.5 && (occupied.has(r.id) || this.camera.position.length() < 2.6))
     }

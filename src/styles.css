@@ -221,3 +221,92 @@ th { color: var(--dim); font-weight: normal; }
   .bottom { padding: 10px 16px 16px; }
   .speed { display: none; }
 }
+
+/* ---------- top right controls */
+.top-right { display: flex; align-items: center; gap: 14px; }
+.void-toggle { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--faint); border-radius: 999px; background: var(--glass); color: var(--dim); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+.void-toggle i { width: 22px; height: 12px; border-radius: 6px; background: var(--faint); position: relative; transition: background 0.3s; }
+.void-toggle i::after { content: ''; position: absolute; top: 2px; left: 2px; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); transition: transform 0.3s; }
+.void-toggle.on i { background: var(--v2); }
+.void-toggle.on i::after { transform: translateX(10px); background: #000; }
+
+/* ---------- cinema: interface hidden for capture (H) */
+.cinema .top, .cinema .selves-bar, .cinema .bottom, .cinema .globe-overlay .label-city { opacity: 0; pointer-events: none; }
+.cinema .chorus { bottom: 7vh; }
+.cinema .top, .cinema .selves-bar, .cinema .bottom { transition: opacity 0.6s; }
+
+/* ---------- void mode: retro console, pixel font, hard edges, scanlines */
+.app.void {
+  --ink: var(--v3);
+  --dim: var(--v2);
+  --faint: var(--v1);
+  --key: var(--v3);
+  --fill: var(--v2);
+  --glass: #000;
+  background: #000;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  line-height: 1.6;
+}
+.app.void * { border-radius: 0 !important; text-transform: uppercase; }
+.app.void button, .app.void select, .app.void input { font-family: 'Press Start 2P', monospace; font-size: 9px; }
+.app.void::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px);
+  animation: flicker 0.12s steps(2) infinite;
+}
+@keyframes flicker { 50% { opacity: 0.85; } }
+.app.void .top { background: none; }
+.app.void .title { font-size: 12px; letter-spacing: 0.08em; text-decoration: none; color: var(--v3); text-shadow: 2px 2px 0 var(--v1); }
+.app.void .subtitle { font-size: 7px; letter-spacing: 0.05em; color: var(--v2); }
+.app.void .tabs, .app.void .cam, .app.void .void-toggle { border: 2px solid var(--v2); backdrop-filter: none; padding: 2px; }
+.app.void .tabs button { padding: 8px 10px; color: var(--v2); }
+.app.void .tabs button.on, .app.void .cam button.on, .app.void .speed button.on { background: var(--v3); color: #000; }
+.app.void .tabs button.on::before { content: '\25b6 '; }
+.app.void .void-toggle { color: var(--v3); }
+.app.void .selves-bar > button { font-size: 8px; padding: 6px 8px 6px 6px; }
+.app.void .selves-bar > button i { height: 6px; width: 6px; box-shadow: none; border-radius: 0; }
+.app.void .selves-bar > button.on, .app.void .selves-bar > button:hover { background: var(--v1); color: var(--v3); }
+.app.void .selves-bar > button.on::after { content: ' \25c0'; }
+.app.void .toggle { font-size: 7px; }
+.app.void .label-self { font-size: 8px; text-shadow: 1px 1px 0 #000; }
+.app.void .label-city { font-size: 7px; letter-spacing: 0; }
+.app.void .label-iss { font-size: 7px; }
+.app.void .chorus.void { max-width: 900px; }
+.app.void .chorus-era { font-size: 9px; letter-spacing: 0.05em; color: var(--v3); animation: none; text-shadow: 2px 2px 0 var(--v1); }
+.app.void .hud { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 8px; color: var(--v2); }
+.app.void .hud .who { color: var(--c); }
+.app.void .chorus-line { font-size: 13px; line-height: 1.8; padding: 14px 16px; margin-top: 12px; background: #000; border: 2px solid var(--v3); box-shadow: 4px 4px 0 var(--v1); animation: none; text-shadow: none; text-transform: none; }
+.app.void .cursor { animation: blink 0.8s steps(1) infinite; color: var(--v3); margin-left: 2px; }
+@keyframes blink { 50% { opacity: 0; } }
+.app.void .bottom { background: #000; border-top: 2px solid var(--v1); }
+.app.void .play { border: 2px solid var(--v3); background: #000; color: var(--v3); letter-spacing: 0; }
+.app.void .track .era { height: 8px; top: 8px; opacity: 1; background: var(--v1) !important; border-right: 2px solid #000; }
+.app.void .track .head { background: var(--v3); box-shadow: none; width: 4px; }
+.app.void .track .head span { font-size: 9px; }
+.app.void .track .tick span { font-size: 7px; }
+.app.void .speed button { font-size: 7px; }
+.app.void .tooltip { background: #000; border: 2px solid var(--v3); box-shadow: 4px 4px 0 var(--v1); backdrop-filter: none; font-size: 8px; }
+.app.void .tip-line, .app.void .sentence, .app.void .half-line, .app.void td.line, .app.void .timeline .n { text-transform: none; font-style: normal; }
+.app.void .loom.void { image-rendering: pixelated; }
+.app.void .card { background: #000; border: 2px solid var(--v2); box-shadow: 6px 6px 0 var(--v1); }
+.app.void .card::before { border: 2px dashed var(--c); opacity: 0.35; }
+.app.void .card h3 { font-size: 11px; text-decoration: none; line-height: 1.5; }
+.app.void .card-kicker, .app.void .card-home, .app.void .choice, .app.void .card-meta, .app.void .card-now { font-size: 7px; }
+.app.void .sentence { font-size: 9px; line-height: 1.7; }
+.app.void .panel { background: #000; border: 2px solid var(--v2); backdrop-filter: none; }
+.app.void .panel h4 { font-size: 9px; text-decoration: none; color: var(--v3); }
+.app.void .panel h4::before { content: '\25a0 '; color: var(--v2); }
+.app.void table, .app.void .kv, .app.void .quakes, .app.void .sources li, .app.void .dist-row, .app.void .heat-row .lbl { font-size: 7px; }
+.app.void .half select { border: 2px solid var(--c); background: #000; }
+.app.void .half-place { font-size: 20px; text-transform: uppercase; }
+.app.void .half-line { font-size: 11px; line-height: 1.8; }
+.app.void .half-map { border: 2px solid var(--v2); }
+.app.void .drawer-body { background: #000; border-left: 2px solid var(--v3); }
+.app.void .drawer-body.about p { font-size: 9px; line-height: 2; text-transform: none; }
+.app.void .drawer-body h2 { text-decoration: none; font-size: 13px; }
+.app.void .timeline li { font-size: 7px; }

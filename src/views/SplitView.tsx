@@ -6,10 +6,11 @@ import { useYear } from '../lib/clock'
 import type { LandData } from '../lib/geo'
 import type { SimResult } from '../sim/engine'
 import { MapView } from './MapView'
+import type { VisualStyle } from '../globe/GlobeScene'
 
 // The split (PRD 4.2, idea 4): two selves on one clock, two halves of a doorway.
 
-function Half({ id, setId, sim, land, year }: { id: string; setId: (v: string) => void; sim: SimResult; land: LandData | null; year: number }) {
+function Half({ id, setId, sim, land, year, style }: { id: string; setId: (v: string) => void; sim: SimResult; land: LandData | null; year: number; style: VisualStyle }) {
   const s = SELF_BY_ID[id]
   const rows = sim.canonical.paths[id]
   const row = rows[Math.min(rows.length - 1, year - CLOCK.start)]
@@ -19,7 +20,7 @@ function Half({ id, setId, sim, land, year }: { id: string; setId: (v: string) =
       <select value={id} onChange={(e) => setId(e.target.value)}>
         {SELVES.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
       </select>
-      <div className="half-map"><MapView sim={sim} land={land} selves={[id]} compact /></div>
+      <div className="half-map"><MapView sim={sim} land={land} selves={[id]} compact style={style} /></div>
       <div className="half-now">
         <div className="half-year">{year}, age {row.age}</div>
         <div className="half-place">{PLACE_BY_ID[row.place].city}</div>
@@ -35,15 +36,15 @@ function Half({ id, setId, sim, land, year }: { id: string; setId: (v: string) =
   )
 }
 
-export function SplitView({ sim, land }: { sim: SimResult; land: LandData | null }) {
+export function SplitView({ sim, land, style }: { sim: SimResult; land: LandData | null; style: VisualStyle }) {
   const year = useYear()
   const [a, setA] = useState('real')
   const [b, setB] = useState(SELVES[1].id)
   return (
     <div className="split">
-      <Half id={a} setId={setA} sim={sim} land={land} year={year} />
+      <Half id={a} setId={setA} sim={sim} land={land} year={year} style={style} />
       <div className="door" />
-      <Half id={b} setId={setB} sim={sim} land={land} year={year} />
+      <Half id={b} setId={setB} sim={sim} land={land} year={year} style={style} />
     </div>
   )
 }
