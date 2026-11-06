@@ -366,6 +366,8 @@ export class GlobeScene {
   popupEl: HTMLElement | null = null
   popupPlace: string | null = null
   pinnedPlace: string | null = null
+  private lastStop: string | null = null
+  private popAt = -Infinity
   onPopup?: (placeId: string | null) => void
   onPlace?: (placeId: string) => void
   private quakes?: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
@@ -1019,17 +1021,22 @@ export class GlobeScene {
       this.place(r.label, r.mesh.position, reveal > 0.5 && (occupied.has(r.id) || (kind === 'lived' && this.camera.position.length() < 2.6)))
     }
 
-    // Place pop-up: the pinned place, or where the focused self is dwelling
+    // Place pop-up: the pinned place, or the last place the focused life
+    // stopped in. A card stays up at least a couple of seconds so it can be read.
     let pop: string | null = this.pinnedPlace
     if (!pop && this.mode !== 'orbit' && this.sim && reveal > 0.9) {
       const id = this.focusId ?? 'real'
       const loc = locate(this.sim.canonical.paths[id], t)
-      if (loc.k === 0 && PLACE_BY_ID[loc.a].kind !== 'hub') pop = loc.a
-    }
-    if (pop !== this.popupPlace) {
+      if (loc.k === 0 && PLACE_BY_ID[loc.a].kind !== 'hub') this.lastStop = loc.a
+      pop = this.lastStop
+    } else if (!pop) this.lastStop = null
+    const held = nowMs - this.popAt < 2600
+    if (pop !== this.popupPlace && (!held || !this.popupPlace || this.pinnedPlace)) {
       this.popupPlace = pop
+      this.popAt = nowMs
       this.onPopup?.(pop)
     }
+    pop = this.popupPlace
     if (this.popupEl) {
       if (pop) {
         const pl = PLACE_BY_ID[pop]

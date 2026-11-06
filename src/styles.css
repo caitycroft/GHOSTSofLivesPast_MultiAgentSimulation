@@ -511,3 +511,5 @@ tr.shared { opacity: 0.5; }
 .clean:not(.portrait) .layer.scroll { padding-top: 60px; padding-bottom: 170px; }
 .clean.portrait .tl-year { display: none; }
 .clean.portrait .timeline-view { --lane-h: 72px; }
+/* phone legibility for docked cards in vertical capture */
+.cinema.portrait .popup-anchor .place-card, .cinema.portrait .city-card .place-card { zoom: 1.2; }
