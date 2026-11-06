@@ -29,6 +29,9 @@ const outDir = arg('out', `media/shots/${aspect}`)
 const limit = Number(arg('seconds', 0))
 const software = process.argv.includes('--software')
 const skip = process.argv.includes('--skip-existing')
+// A fixed real moment for the sun: afternoon over the Atlantic, so the
+// Americas and Europe are in daylight. The day and night line is still the real one.
+const startTime = new Date(arg('time', '2026-11-06T15:30:00Z'))
 const ids = arg('shots', '') ? arg('shots').split(',') : Object.keys(SHOTS).filter((k) => k.startsWith(arg('prefix', '')))
 const size = ASPECTS[aspect]
 mkdirSync(outDir, { recursive: true })
@@ -46,7 +49,7 @@ for (const id of ids) {
   const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '16', '-pix_fmt', 'yuv420p', out], { stdio: ['pipe', 'inherit', 'inherit'] })
   const page = await browser.newPage({ viewport: size, deviceScaleFactor: 1 })
   const start = Date.now()
-  await page.clock.install({ time: new Date() })
+  await page.clock.install({ time: startTime })
   await page.goto(base + shot.url)
   for (let ahead = 1000; ; ahead *= 2) {
     try {

@@ -1046,7 +1046,8 @@ export class GlobeScene {
     // Camera
     const introEase = 1 - Math.pow(1 - this.intro, 3)
     if (this.intro < 1 && !this.pointerDown) {
-      const ang = time * 0.12 + 0.6
+      // the opening orbit arrives over North America, where every thread starts
+      const ang = time * 0.12 - 1.15
       const dist = 10 - introEase * 6.2
       this.camera.position.set(Math.sin(ang) * dist, 0.9 + (1 - introEase) * 2.2, Math.cos(ang) * dist)
       this.camera.lookAt(0, 0, 0)
