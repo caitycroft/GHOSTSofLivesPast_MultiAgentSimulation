@@ -1047,7 +1047,9 @@ export class GlobeScene {
         if (m && card) {
           const w = this.host.clientWidth, hh = this.host.clientHeight
           const x = Math.min(Math.max(Number(m[1]), 20), w - card.offsetWidth - 60)
-          const y = Math.min(Math.max(Number(m[2]), 80), hh - card.offsetHeight - 20)
+          // in capture (cinema) keep a band free at the bottom for burned in captions
+          const bottomPad = document.querySelector('.cinema') ? 230 : 20
+          const y = Math.min(Math.max(Number(m[2]), 80), hh - card.offsetHeight - bottomPad)
           this.popupEl.style.transform = `translate(${x}px, ${y}px)`
           this.popupEl.style.opacity = '1'
         }
