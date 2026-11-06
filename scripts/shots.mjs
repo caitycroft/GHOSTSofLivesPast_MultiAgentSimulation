@@ -21,7 +21,7 @@ export const SHOTS = {
   a_hook: { url: base('arcade', 'city', '&mode=follow'), duration: 9, steps: [[0, clock(2014.72, 0.85)]] },
   a_globe_build: { url: base('arcade', 'globe', '&mode=orbit'), duration: 10, steps: [[0, clock(2010, 0.35)]] },
   a_globe_follow: { url: base('arcade', 'globe', '&mode=follow&nobuild=1'), duration: 11, steps: [[0, clock(2015.55, 0.36)]] },
-  a_dio_sto: { url: base('arcade', 'city', '&mode=orbit'), duration: 9, steps: [[0, clock(2016.12, 0.07)]] },
+  a_dio_sto: { url: base('arcade', 'city', '&mode=orbit&focus=sto'), duration: 9, steps: [[0, clock(2016.12, 0.07)], [0, focus('sto')]] },
   a_street_forks: { url: base('arcade', 'city', '&mode=follow'), duration: 12, steps: [[0, clock(2020.25, 0.55)]] },
   a_globe_tour: { url: base('arcade', 'globe', '&mode=follow&nobuild=1'), duration: 14, steps: [[0, clock(2024.6, 0.38)], [0, focus('sto')], [3.5, focus('hnl')], [7, focus('ber')], [10.5, focus('sha')]] },
   a_timeline: { url: base('arcade', 'timeline'), duration: 12, steps: [[0, clock(2010.6, 1.3)]] },
