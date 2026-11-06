@@ -2,7 +2,7 @@
 // as a static site. Slow moving sources are cached in localStorage for a day.
 // When a source is unreachable the piece falls back and says so on screen.
 
-export type SourceStatus = 'idle' | 'loading' | 'live' | 'cached' | 'offline'
+export type SourceStatus = 'idle' | 'loading' | 'live' | 'cached' | 'snapshot' | 'offline'
 
 export interface Receipt {
   label: string

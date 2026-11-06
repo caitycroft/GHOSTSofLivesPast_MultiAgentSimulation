@@ -12,6 +12,7 @@ import type { SimResult } from '../sim/engine'
 import type { ISS, Quake } from '../live/sources'
 import { latLonToVec3, type LandData } from '../lib/geo'
 import { buildThreadGeometry, radiusAt, threadPoint } from './threads'
+import { locate } from '../sim/route'
 
 export type CameraMode = 'orbit' | 'follow' | 'tour'
 
@@ -93,6 +94,7 @@ const threadFrag = /* glsl */ `
   uniform vec3 uColor;
   uniform float uFocus;
   uniform float uReal;
+  uniform float uFork;
   varying float vYear;
   varying vec3 vN;
   varying vec3 vV;
@@ -104,7 +106,9 @@ const threadFrag = /* glsl */ `
     float head = 2.6 * exp(-age * 7.0);
     vec3 col = uColor * (trail + head) * (0.35 + 0.9 * core);
     col += vec3(1.0) * head * 0.35 * core;
-    gl_FragColor = vec4(col * uFocus, (0.25 + 0.75 * core) * uFocus);
+    // Before its fork a ghost is the real life: a faint strand in the bundle
+    float shared = vYear < uFork ? 0.22 : 1.0;
+    gl_FragColor = vec4(col * uFocus * shared, (0.25 + 0.75 * core) * uFocus * shared);
   }
 `
 
@@ -208,13 +212,14 @@ const atmoFrag = /* glsl */ `
   }
 `
 
-const FinishShader = {
+export const FinishShader = {
   uniforms: {
     tDiffuse: { value: null },
     uTime: { value: 0 },
     uGrain: { value: 0.08 },
     uTint: { value: new THREE.Color('#ffffff') },
     uAberration: { value: 0.0018 },
+    uScan: { value: 0 },
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -226,6 +231,7 @@ const FinishShader = {
     uniform float uGrain;
     uniform vec3 uTint;
     uniform float uAberration;
+    uniform float uScan;
     varying vec2 vUv;
     float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
     void main() {
@@ -241,6 +247,7 @@ const FinishShader = {
       col *= 0.55 + 0.45 * vig;
       float g = hash(vUv * vec2(1920.0, 1080.0) + fract(uTime * 7.0) * 100.0) - 0.5;
       col += g * uGrain * (0.25 + 0.75 * dot(col, vec3(0.333)));
+      col *= 1.0 - uScan * (0.5 + 0.5 * sin(gl_FragCoord.y * 3.14159 * 0.5));
       gl_FragColor = vec4(col, 1.0);
     }
   `,
@@ -249,7 +256,7 @@ const FinishShader = {
 // Void mode: pixel blocks, ordered dither to the era's four colour console
 // palette (saturated light such as the threads keeps its hue), scanlines and
 // a slight CRT bulge.
-const RetroShader = {
+export const RetroShader = {
   uniforms: {
     tDiffuse: { value: null },
     uRes: { value: new THREE.Vector2(1, 1) },
@@ -311,7 +318,16 @@ const RetroShader = {
   `,
 }
 
-export type VisualStyle = 'cyanotype' | 'void'
+export type VisualStyle = 'cyanotype' | 'void' | 'arcade'
+
+const NEON = { land: '#3dff7a', landDim: '#2bd860', coast: '#ff2fd0', grat: '#38f3ff', ring: '#38f3ff', tower: '#ff2fd0', atmo: '#ff2fd0' }
+
+// The colour a thread is drawn in, per style
+export function threadColor(selfId: string, style: VisualStyle): THREE.Color {
+  const s = SELVES.find((x) => x.id === selfId)!
+  if (style === 'arcade') return new THREE.Color(s.neon)
+  return s.real ? new THREE.Color(s.color) : new THREE.Color(s.color).lerp(CYANOTYPE, 0.35)
+}
 
 // ---------------------------------------------------------------- scene
 interface ThreadObj {
@@ -345,6 +361,13 @@ export class GlobeScene {
   private threads: ThreadObj[] = []
   private heads: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
   private rings: { id: string; mesh: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>; label: HTMLDivElement; glow: number }[] = []
+  private towers = new THREE.Group()
+  // Place pop-up: React owns the content, the scene keeps it pinned to its city
+  popupEl: HTMLElement | null = null
+  popupPlace: string | null = null
+  pinnedPlace: string | null = null
+  onPopup?: (placeId: string | null) => void
+  onPlace?: (placeId: string) => void
   private quakes?: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
   private iss: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
   private issTrail: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>
@@ -551,12 +574,12 @@ export class GlobeScene {
     this.threads = []
     SELVES.forEach((s, i) => {
       const rows = sim.canonical.paths[s.id]
-      const color = s.real ? new THREE.Color(s.color) : new THREE.Color(s.color).lerp(CYANOTYPE, 0.35)
+      const color = threadColor(s.id, this.style)
       const geo = buildThreadGeometry(rows, i, s.real ? 0.0042 : 0.0026)
       const mat = new THREE.ShaderMaterial({
         vertexShader: threadVert,
         fragmentShader: threadFrag,
-        uniforms: { uYear: { value: this.year }, uColor: { value: color }, uFocus: { value: 1 }, uReal: { value: s.real ? 1 : 0 } },
+        uniforms: { uYear: { value: this.year }, uColor: { value: color }, uFocus: { value: 1 }, uReal: { value: s.real ? 1 : 0 }, uFork: { value: s.fork?.year ?? 0 } },
         transparent: true,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
@@ -587,7 +610,7 @@ export class GlobeScene {
       const gm = new THREE.ShaderMaterial({
         vertexShader: ghostVert,
         fragmentShader: ghostFrag,
-        uniforms: { uYear: { value: this.year }, uColor: { value: color }, uPixel: { value: this.pixel }, uTime: { value: 0 }, uFocus: { value: 1 } },
+        uniforms: { uYear: { value: this.year }, uColor: { value: color.clone() }, uPixel: { value: this.pixel }, uTime: { value: 0 }, uFocus: { value: 1 } },
         transparent: true,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
@@ -600,15 +623,30 @@ export class GlobeScene {
       label.addEventListener('click', () => this.onSelect?.(s.id))
       this.threads.push({ selfId: s.id, mesh, ghosts, label, focus: 1 })
     })
+    this.applyThreadColors()
+  }
+
+  private applyThreadColors() {
     const colors = this.heads.geometry.getAttribute('aColor') as THREE.BufferAttribute
     const sizes = this.heads.geometry.getAttribute('aSize') as THREE.BufferAttribute
     SELVES.forEach((s, i) => {
-      const c = s.real ? new THREE.Color(s.color) : new THREE.Color(s.color).lerp(CYANOTYPE, 0.35)
+      const c = threadColor(s.id, this.style)
       colors.setXYZ(i, c.r, c.g, c.b)
       sizes.setX(i, s.real ? 30 : 20)
+      const th = this.threads.find((x) => x.selfId === s.id)
+      if (th) {
+        th.mesh.material.uniforms.uColor.value.copy(c)
+        th.ghosts.material.uniforms.uColor.value.copy(c)
+        th.label.style.setProperty('--c', this.style === 'arcade' ? s.neon : s.color)
+      }
     })
     colors.needsUpdate = true
     sizes.needsUpdate = true
+  }
+
+  // Pin a place's pop-up (or clear it); in follow and tour the focused self's place shows
+  pinPlace(id: string | null) {
+    this.pinnedPlace = id
   }
 
   setQuakes(list: Quake[]) {
@@ -677,12 +715,18 @@ export class GlobeScene {
   setStyle(style: VisualStyle) {
     this.style = style
     const v = style === 'void'
+    const neon = style === 'arcade'
     this.finish.enabled = !v
     this.retro.enabled = v
-    this.bloom.strength = v ? 0.55 : 0.8
-    this.bloom.threshold = v ? 0.25 : 0.18
-    if (this.land) this.land.material.uniforms.uVoid.value = v ? 1 : 0
-    for (const r of this.rings) r.mesh.geometry = v ? this.ringHex : this.ringRound
+    this.bloom.strength = v ? 0.55 : neon ? 0.7 : 0.8
+    this.bloom.threshold = v ? 0.25 : neon ? 0.22 : 0.18
+    this.bloom.radius = neon ? 0.35 : 0.6
+    this.finish.uniforms.uScan.value = neon ? 0.12 : 0
+    this.finish.uniforms.uAberration.value = neon ? 0.0028 : 0.0018
+    if (this.land) this.land.material.uniforms.uVoid.value = v || neon ? 1 : 0
+    for (const r of this.rings) r.mesh.geometry = v || neon ? this.ringHex : this.ringRound
+    this.towers.visible = neon
+    this.applyThreadColors()
   }
 
   setActive(on: boolean) {
@@ -768,6 +812,29 @@ export class GlobeScene {
   }
 
   private makeCityRings() {
+    // Arcade towers: a little wireframe skyline on every lived city, one tower
+    // per industry, as tall as that industry is strong there
+    const edgeMat = new THREE.LineBasicMaterial({ color: NEON.tower, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })
+    const fillMat = new THREE.MeshBasicMaterial({ color: 0x0a0630, transparent: true, opacity: 0.85, depthWrite: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })
+    for (const p of PLACES.filter((x) => x.kind === 'lived')) {
+      const city = new THREE.Group()
+      const d = latLonToVec3(p.lat, p.lon, 1.0)
+      city.position.copy(d)
+      city.lookAt(d.clone().multiplyScalar(2))
+      const inds = Object.entries(p.industries).sort((a, b) => b[1] - a[1]).slice(0, 5)
+      inds.forEach(([, strength], i) => {
+        const h = 0.012 + strength * 0.05
+        const w = 0.006 + (i % 2) * 0.002
+        const box = new THREE.BoxGeometry(w, w, h)
+        box.translate(Math.cos(i * 2.4) * 0.011 * (i > 0 ? 1 : 0), Math.sin(i * 2.4) * 0.011 * (i > 0 ? 1 : 0), h / 2)
+        city.add(new THREE.Mesh(box, fillMat))
+        city.add(new THREE.LineSegments(new THREE.EdgesGeometry(box), edgeMat))
+      })
+      this.towers.add(city)
+    }
+    this.towers.visible = false
+    this.world.add(this.towers)
+
     for (const p of PLACES) {
       const mesh = new THREE.Mesh(
         this.ringRound,
@@ -777,7 +844,8 @@ export class GlobeScene {
       mesh.position.copy(d)
       mesh.lookAt(d.clone().multiplyScalar(2))
       this.world.add(mesh)
-      const label = this.makeLabel(p.city, 'label label-city')
+      const label = this.makeLabel(p.city, `label label-city kind-${p.kind}`)
+      label.addEventListener('click', () => this.onPlace?.(p.id))
       this.rings.push({ id: p.id, mesh, label, glow: 0 })
     }
   }
@@ -848,6 +916,7 @@ export class GlobeScene {
       u.uTime.value = time
     }
     const isVoid = this.style === 'void'
+    const isNeon = this.style === 'arcade'
     const coastIn = Math.max(0, (this.build - 0.6) / 0.4)
 
     // Era light. In void mode the palette snaps per era, like a new stage.
@@ -868,6 +937,13 @@ export class GlobeScene {
       this.retro.uniforms.uBlock.value = Math.max(2, Math.round((size.x / this.pixel > 1700 ? 4 : 3) * this.pixel))
       this.atmo.material.uniforms.uColor.value.copy(pal[1])
       this.grat.material.color.copy(pal[2])
+    } else if (isNeon) {
+      // Arcade: fixed neon set, the era only tints the sky
+      key = new THREE.Color(NEON.land)
+      fill = new THREE.Color(NEON.landDim)
+      ground = new THREE.Color(a.neon.sky).lerp(new THREE.Color(b.neon.sky), k)
+      this.atmo.material.uniforms.uColor.value.set(NEON.atmo)
+      this.grat.material.color.set(NEON.grat)
     } else {
       key = new THREE.Color(a.light.key).lerp(new THREE.Color(b.light.key), k)
       fill = new THREE.Color(a.light.fill).lerp(new THREE.Color(b.light.fill), k)
@@ -880,16 +956,16 @@ export class GlobeScene {
       this.land.material.uniforms.uFill.value.copy(fill)
     }
     if (this.coast) {
-      this.coast.material.opacity = coastIn * (isVoid ? 0.6 : 0.28)
-      this.coast.material.color.copy(isVoid ? key : new THREE.Color('#ffffff'))
+      this.coast.material.opacity = coastIn * (isVoid ? 0.6 : isNeon ? 0.75 : 0.28)
+      this.coast.material.color.copy(isVoid ? key : isNeon ? new THREE.Color(NEON.coast) : new THREE.Color('#ffffff'))
     }
-    this.atmo.material.uniforms.uStrength.value = (isVoid ? 0.35 : 0.6) * this.build
-    this.core.material.color.copy(isVoid ? new THREE.Color('#000000') : ground)
-    this.renderer.setClearColor(isVoid ? new THREE.Color('#000000') : ground.clone().multiplyScalar(0.35))
-    this.grat.material.opacity = (isVoid ? 0.2 : 0.05) * this.build
+    this.atmo.material.uniforms.uStrength.value = (isVoid ? 0.35 : isNeon ? 0.42 : 0.6) * this.build
+    this.core.material.color.copy(isVoid || isNeon ? new THREE.Color('#000000') : ground)
+    this.renderer.setClearColor(isVoid ? new THREE.Color('#000000') : isNeon ? ground.clone().multiplyScalar(0.6) : ground.clone().multiplyScalar(0.35))
+    this.grat.material.opacity = (isVoid ? 0.2 : isNeon ? 0.14 : 0.05) * this.build
     this.finish.uniforms.uTime.value = time
-    this.finish.uniforms.uGrain.value = (a.light.grain * (1 - k) + b.light.grain * k) * 0.35
-    this.finish.uniforms.uTint.value.copy(key)
+    this.finish.uniforms.uGrain.value = isNeon ? 0.01 : (a.light.grain * (1 - k) + b.light.grain * k) * 0.35
+    this.finish.uniforms.uTint.value.copy(isNeon ? new THREE.Color('#ffffff') : key)
 
     // Threads, ghosts, heads
     const year = Math.floor(t)
@@ -926,15 +1002,36 @@ export class GlobeScene {
 
     // Glass rings: scale with connection, glow while a self is there
     for (const r of this.rings) {
+      const kind = PLACE_BY_ID[r.id].kind
       const conn = this.sim?.connection[r.id]?.[Math.min(CLOCK.end, Math.max(CLOCK.start, year))]?.value ?? 2.5
-      const s = 0.012 + conn * 0.0075
+      const s = (kind === 'waypoint' ? 0.008 : 0.012) + conn * (kind === 'waypoint' ? 0.003 : 0.0075)
       r.mesh.scale.setScalar(s)
-      const target = occupied.has(r.id) ? 0.7 : 0.16
+      const resting = kind === 'lived' ? 0.2 : kind === 'waypoint' ? 0.1 : 0
+      const target = occupied.has(r.id) ? 0.7 : resting
       r.glow += (target - r.glow) * (1 - Math.exp(-dt * 4))
       r.mesh.material.opacity = r.glow * reveal
-      r.mesh.material.color.copy(key).lerp(new THREE.Color('#ffffff'), isVoid ? 0 : 0.5)
+      if (isNeon) r.mesh.material.color.set(occupied.has(r.id) ? '#ffffff' : NEON.ring)
+      else r.mesh.material.color.copy(key).lerp(new THREE.Color('#ffffff'), isVoid ? 0 : 0.5)
       r.label.classList.toggle('on', occupied.has(r.id))
-      this.place(r.label, r.mesh.position, reveal > 0.5 && (occupied.has(r.id) || this.camera.position.length() < 2.6))
+      this.place(r.label, r.mesh.position, reveal > 0.5 && (occupied.has(r.id) || (kind === 'lived' && this.camera.position.length() < 2.6)))
+    }
+
+    // Place pop-up: the pinned place, or where the focused self is dwelling
+    let pop: string | null = this.pinnedPlace
+    if (!pop && this.mode !== 'orbit' && this.sim && reveal > 0.9) {
+      const id = this.focusId ?? 'real'
+      const loc = locate(this.sim.canonical.paths[id], t)
+      if (loc.k === 0 && PLACE_BY_ID[loc.a].kind !== 'hub') pop = loc.a
+    }
+    if (pop !== this.popupPlace) {
+      this.popupPlace = pop
+      this.onPopup?.(pop)
+    }
+    if (this.popupEl) {
+      if (pop) {
+        const pl = PLACE_BY_ID[pop]
+        this.place(this.popupEl, latLonToVec3(pl.lat, pl.lon, 1.01), true)
+      } else this.popupEl.style.opacity = '0'
     }
 
     if (this.quakes) {

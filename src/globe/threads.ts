@@ -3,6 +3,7 @@ import { CLOCK } from '../data/eras'
 import { PLACE_BY_ID } from '../data/places'
 import type { PathRow } from '../sim/engine'
 import { latLonToVec3 } from '../lib/geo'
+import { locate } from '../sim/route'
 
 // Time is altitude: every thread rises off the planet as the clock runs, so the
 // whole run reads as a loom of light standing on the globe (PRD 4.2, idea 1).
@@ -27,7 +28,6 @@ function basis(placeId: string) {
   return b
 }
 
-const ease = (s: number) => s * s * (3 - 2 * s)
 const tmpA = new THREE.Vector3()
 const tmpB = new THREE.Vector3()
 const tmpE1 = new THREE.Vector3()
@@ -38,18 +38,16 @@ export function radiusAt(t: number) {
 }
 
 export function threadPoint(rows: PathRow[], selfIdx: number, t: number, out = new THREE.Vector3()): THREE.Vector3 {
-  const f = Math.max(0, Math.min(rows.length - 1, t - CLOCK.start))
-  const i = Math.min(rows.length - 2, Math.floor(f))
-  const s = Math.max(0, Math.min(1, f - i))
-  const a = basis(rows[i].place)
-  const b = basis(rows[Math.min(rows.length - 1, i + 1)].place)
+  const loc = locate(rows, t)
+  const a = basis(loc.a)
+  const b = basis(loc.b)
   let r = radiusAt(t)
-  if (a === b) {
+  if (a === b || loc.k === 0) {
     tmpA.copy(a.d)
     tmpE1.copy(a.e1)
     tmpE2.copy(a.e2)
   } else {
-    const k = ease(s)
+    const k = loc.k
     const angle = a.d.angleTo(b.d)
     // Spherical interpolation of the direction, with the arc lifted by distance
     const sinA = Math.sin(angle) || 1
@@ -71,7 +69,7 @@ export function threadPoint(rows: PathRow[], selfIdx: number, t: number, out = n
 
 // A tube whose every vertex knows which year it belongs to, so a shader can
 // draw it in as the clock runs. Parallel transport frames keep it untwisted.
-export function buildThreadGeometry(rows: PathRow[], selfIdx: number, radius: number, stepsPerYear = 24, radial = 6) {
+export function buildThreadGeometry(rows: PathRow[], selfIdx: number, radius: number, stepsPerYear = 64, radial = 6) {
   const pts: THREE.Vector3[] = []
   const years: number[] = []
   const total = (rows.length - 1) * stepsPerYear

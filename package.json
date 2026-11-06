@@ -6,7 +6,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "snapshot": "node scripts/snapshot-data.mjs",
+    "check-events": "node scripts/check-events.mjs"
   },
   "repository": {
     "type": "git",

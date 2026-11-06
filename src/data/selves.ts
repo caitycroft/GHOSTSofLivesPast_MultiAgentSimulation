@@ -1,71 +1,63 @@
-// SELF table (PRD 3.1). DRAFT CAST: the places, years and real choices below
-// are placeholders until the notebook lines in PRD Part 6 are filled in.
-// Edit this file (or replace it with JSON) and every view updates.
+// SELF table (PRD 3.1). One thread is the life that happened. Every other
+// thread is a ghost: the same person, with the same background, who stayed in
+// a place she actually lived at the moment she was there. Ghosts share the
+// real thread until their fork, then the simulation takes over.
+// Sentences are drafts, to be rewritten in Caity's voice.
 
 export interface Self {
   id: string
   name: string
-  home: string // place id
   real?: boolean
-  attrs: { craft: number; network: number; risk: number; capital: number } // 1 to 5
-  // For the real self only: the choices that actually happened, by age
-  lived?: { 18: string; 25: string; 30: string }
-  color: string
+  fork?: { year: number; place: string; note: string }
+  color: string // classic and void
+  neon: string // arcade
   sentence: string
 }
 
-export const BIRTH_YEAR = 1990 // eighteen in 2008, the first frame of the clock
+export const START_ATTRS = { craft: 3, network: 2, risk: 4, capital: 2 } // 1 to 5, in 2010
 
 export const SELVES: Self[] = [
   {
-    id: 'real', name: 'The one who lived it', home: 'la', real: true,
-    attrs: { craft: 4, network: 3, risk: 4, capital: 2 },
-    lived: { 18: 'filmschool', 25: 'xrgames', 30: 'build' },
-    color: '#ffb36b',
+    id: 'real', name: 'The one who lived it', real: true, color: '#ffb36b', neon: '#ff9a3d',
     sentence: 'I learned that stories move industries, then I went and built the worlds they move through.',
   },
   {
-    id: 'toronto', name: 'The Toronto self', home: 'tor',
-    attrs: { craft: 3, network: 3, risk: 2, capital: 3 },
-    color: '#7cc4ff',
-    sentence: 'I stayed close to the lake and let the work come north to me.',
+    id: 'la', name: 'The Los Angeles self', fork: { year: 2014, place: 'la', note: 'stayed in Los Angeles instead of touring' }, color: '#ff9ccf', neon: '#ff2fd0',
+    sentence: 'I stayed in Los Angeles when the tour called, and found out what that city does with a storyteller.',
   },
   {
-    id: 'london', name: 'The London self', home: 'lon',
-    attrs: { craft: 3, network: 4, risk: 3, capital: 3 },
-    color: '#5aa9ff',
-    sentence: 'I learned to speak in rooms where the money listened.',
+    id: 'sto', name: 'The Stockholm self', fork: { year: 2016, place: 'sto', note: 'stayed in Stockholm' }, color: '#7cc4ff', neon: '#38f3ff',
+    sentence: 'I stayed for the long summer light and let the city decide what I would make.',
   },
   {
-    id: 'berlin', name: 'The Berlin self', home: 'ber',
-    attrs: { craft: 4, network: 2, risk: 5, capital: 2 },
-    color: '#4d8cff',
-    sentence: 'I bet on every new world early and kept the receipts.',
+    id: 'utah', name: 'The Utah self', fork: { year: 2021, place: 'utah', note: 'stayed in the mountains' }, color: '#9ad7ff', neon: '#3dff7a',
+    sentence: 'I stayed in the mountains and let the work come to me.',
   },
   {
-    id: 'tokyo', name: 'The Tokyo self', home: 'tyo',
-    attrs: { craft: 5, network: 2, risk: 2, capital: 2 },
-    color: '#9ad7ff',
-    sentence: 'I made one thing very well for a very long time.',
+    id: 'hnl', name: 'The Hawaii self', fork: { year: 2021, place: 'hnl', note: 'stayed on the island' }, color: '#62d6ff', neon: '#ffd23d',
+    sentence: 'I stayed on the island and built a life around the ocean.',
   },
   {
-    id: 'seoul', name: 'The Seoul self', home: 'sel',
-    attrs: { craft: 4, network: 3, risk: 3, capital: 2 },
-    color: '#6fb7ff',
-    sentence: 'I watched my city become the whole world’s screen.',
+    id: 'lon', name: 'The London self', fork: { year: 2023, place: 'lon', note: 'stayed in London' }, color: '#5aa9ff', neon: '#b98cff',
+    sentence: 'I stayed in London and found my place between its music and its money.',
   },
   {
-    id: 'sydney', name: 'The Sydney self', home: 'syd',
-    attrs: { craft: 3, network: 2, risk: 4, capital: 3 },
-    color: '#3f7fe6',
-    sentence: 'I was always a day ahead and a year behind.',
+    id: 'ber', name: 'The Berlin self', fork: { year: 2023, place: 'ber', note: 'stayed in Berlin' }, color: '#4d8cff', neon: '#ff5f5f',
+    sentence: 'I stayed in Berlin, where the club was the lab.',
   },
   {
-    id: 'mexico', name: 'The Mexico City self', home: 'mex',
-    attrs: { craft: 4, network: 3, risk: 3, capital: 1 },
-    color: '#8ec9ff',
-    sentence: 'I made films with what we had and the world came to see them.',
+    id: 'nyc', name: 'The New York self', fork: { year: 2024, place: 'nyc', note: 'stayed in New York after the program' }, color: '#a8b8ff', neon: '#5f8bff',
+    sentence: 'I stayed in New York and built the thing everyone in the program was talking about.',
+  },
+  {
+    id: 'osl', name: 'The Oslo self', fork: { year: 2024, place: 'osl', note: 'stayed in Oslo' }, color: '#8ec9ff', neon: '#7dfff0',
+    sentence: 'I stayed in Oslo, where the long view is a national habit.',
+  },
+  {
+    id: 'sha', name: 'The Shanghai self', fork: { year: 2024, place: 'sha', note: 'stayed in Shanghai after graduating' }, color: '#3f7fe6', neon: '#c8ff3d',
+    sentence: 'I stayed in Shanghai, where the future ships first.',
   },
 ]
 
 export const SELF_BY_ID: Record<string, Self> = Object.fromEntries(SELVES.map((s) => [s.id, s]))
+export const GHOSTS = SELVES.filter((s) => !s.real)

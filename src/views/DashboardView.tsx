@@ -104,13 +104,16 @@ function Lines({ series, year, height = 90, labels }: { series: { name: string; 
 export function DashboardView({ sim, weather, live }: { sim: SimResult; weather: WeatherTable; live: Live }) {
   const year = Math.min(CLOCK.end, useYear())
   const maxQ = live.quakes.reduce((m, q) => (q.mag > m.mag ? q : m), { mag: 0, place: '', lat: 0, lon: 0, id: '', time: 0 })
-  const palette = ['#ffd29a', '#7cc4ff', '#ff8fd1', '#9affd6', '#c9b6ff', '#ffb36b']
-  const attention = Object.entries(WIKI_TOPICS).map(([ind, topics], i) => {
+  const palette = ['#ffd29a', '#7cc4ff', '#ff8fd1', '#9affd6', '#c9b6ff', '#ffb36b', '#ff6b6b']
+  const attention = Object.entries(WIKI_TOPICS).map(([ind, topics]) => {
     const data: Series = {}
     for (const tp of topics) for (const [y, v] of Object.entries(live.signals.wiki[tp] ?? {})) data[Number(y)] = (data[Number(y)] ?? 0) + v
-    return { name: INDUSTRIES.find((x) => x.id === ind)!.label.split(' ')[0], data, color: palette[i] }
+    const info = INDUSTRIES.find((x) => x.id === ind)!
+    return { name: info.short, data, color: info.color }
   })
-  const internet = Array.from(new Set(PLACES.map((p) => p.iso3))).slice(0, 8).map((iso, i) => ({ name: iso, data: live.signals.internet[iso] ?? {}, color: palette[i % palette.length] }))
+  const lived = ['USA', 'SWE', 'GBR', 'DEU', 'NOR', 'CHN']
+  const gdp = lived.map((iso, i) => ({ name: iso, data: live.signals.gdp[iso] ?? {}, color: palette[i] }))
+  const inflation = lived.map((iso, i) => ({ name: iso, data: live.signals.inflation[iso] ?? {}, color: palette[i] }))
 
   return (
     <div className="dash">
@@ -130,7 +133,7 @@ export function DashboardView({ sim, weather, live }: { sim: SimResult; weather:
       <Panel title="The cast cities, right now">
         <table className="cities">
           <tbody>
-            {PLACES.map((p) => {
+            {PLACES.filter((p) => p.kind === 'lived').map((p) => {
               const w = live.cities.find((c) => c.id === p.id)
               const here = SELVES.filter((s) => sim.canonical.paths[s.id][year - CLOCK.start].place === p.id)
               return (
@@ -147,7 +150,7 @@ export function DashboardView({ sim, weather, live }: { sim: SimResult; weather:
         </table>
       </Panel>
 
-      <Panel title="Industry weather, 2008 to 2031 (hover for receipts)" wide>
+      <Panel title="Industry weather, 2010 to 2031 (hover for receipts)" wide>
         <Heatmap weather={weather} year={year} />
       </Panel>
 
@@ -155,9 +158,12 @@ export function DashboardView({ sim, weather, live }: { sim: SimResult; weather:
         <Lines series={attention} year={year} labels />
       </Panel>
 
-      <Panel title="Macro: world GDP growth and share of each country online">
-        <Lines series={[{ name: 'GDP %', data: live.signals.gdpGrowth ?? {}, color: '#ffd29a' }]} year={year} height={50} labels />
-        <Lines series={internet} year={year} height={70} labels />
+      <Panel title="GDP growth, % a year, every country she lived in (World Bank)">
+        <Lines series={gdp} year={year} height={90} labels />
+      </Panel>
+
+      <Panel title="Inflation, % a year (World Bank)">
+        <Lines series={inflation} year={year} height={90} labels />
       </Panel>
 
       <Panel title={`The selves in ${year}`} wide>
@@ -167,9 +173,9 @@ export function DashboardView({ sim, weather, live }: { sim: SimResult; weather:
             {SELVES.map((s) => {
               const r = sim.canonical.paths[s.id][year - CLOCK.start]
               return (
-                <tr key={s.id}>
+                <tr key={s.id} className={r.lived && !s.real ? 'shared' : ''}>
                   <td style={{ color: s.color }}>{s.name}</td>
-                  <td>{PLACE_BY_ID[r.place].city}</td>
+                  <td>{r.route.map((p) => PLACE_BY_ID[p].city).filter((c, i, a) => a.indexOf(c) === i).join(', ')}</td>
                   <td>{r.role}</td>
                   <td>{'●'.repeat(r.incomeBand)}{'○'.repeat(5 - r.incomeBand)}</td>
                   <td><span className="meter"><i style={{ width: `${r.network}%`, background: s.color }} /></span></td>
@@ -182,7 +188,7 @@ export function DashboardView({ sim, weather, live }: { sim: SimResult; weather:
         <div className="sub">{sim.canonical.crossings.filter((c) => c.year === year).map((c) => `${c.selves.length} selves cross in ${PLACE_BY_ID[c.place].city}`).join('. ') || 'No crossings this year.'}</div>
       </Panel>
 
-      {SELVES.slice(0, 4).map((s) => (
+      {SELVES.filter((s) => ['real', 'la', 'sto', 'nyc'].includes(s.id)).map((s) => (
         <Panel key={s.id} title={s.name}><PathDistribution sim={sim} selfId={s.id} /></Panel>
       ))}
 

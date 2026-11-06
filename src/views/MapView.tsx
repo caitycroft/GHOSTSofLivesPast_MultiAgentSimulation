@@ -8,6 +8,7 @@ import type { Live } from '../live/useLive'
 import type { PathRow, SimResult } from '../sim/engine'
 import { hideTip, showTip, Receipts } from '../ui/tooltip'
 import { INDUSTRIES } from '../data/eras'
+import { locate } from '../sim/route'
 import type { VisualStyle } from '../globe/GlobeScene'
 
 const PIXEL_FONT = '"Press Start 2P", monospace'
@@ -39,26 +40,22 @@ function lerpHex(a: string, b: string, k: number) {
 }
 
 export function loomPoint(rows: PathRow[], idx: number, t: number): [number, number] {
-  const f = Math.max(0, Math.min(rows.length - 1, t - CLOCK.start))
-  const i = Math.min(rows.length - 2, Math.floor(f))
-  const s = f - i
-  const a = PLACE_BY_ID[rows[i].place]
-  const b = PLACE_BY_ID[rows[i + 1].place]
-  let lon: number, lat: number
-  if (a === b) {
-    lon = a.lon
-    lat = a.lat
-  } else {
-    const k = s * s * (3 - 2 * s)
+  const loc = locate(rows, t)
+  const a = PLACE_BY_ID[loc.a]
+  const b = PLACE_BY_ID[loc.b]
+  let lon = a.lon
+  let lat = a.lat
+  if (a !== b && loc.k > 0) {
     let dLon = b.lon - a.lon
     if (dLon > 180) dLon -= 360
     if (dLon < -180) dLon += 360
-    lon = a.lon + dLon * k
-    lat = a.lat + (b.lat - a.lat) * k
-    const dist = Math.hypot(dLon, b.lat - a.lat)
-    lat += Math.sin(Math.PI * k) * dist * 0.18
+    lon = a.lon + dLon * loc.k
+    lat = a.lat + (b.lat - a.lat) * loc.k
+    lat += Math.sin(Math.PI * loc.k) * Math.hypot(dLon, b.lat - a.lat) * 0.18
+    if (lon > 180) lon -= 360
+    if (lon < -180) lon += 360
   }
-  const phi = t * 2.4 + idx * 0.785
+  const phi = t * 2.4 + idx * 0.63
   const rad = 0.5 + (t - CLOCK.start) * 0.16
   return [lon + Math.cos(phi) * rad * 1.25, lat + Math.sin(phi) * rad]
 }

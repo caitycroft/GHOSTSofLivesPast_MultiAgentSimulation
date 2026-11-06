@@ -22,8 +22,8 @@ function Half({ id, setId, sim, land, year, style }: { id: string; setId: (v: st
       </select>
       <div className="half-map"><MapView sim={sim} land={land} selves={[id]} compact style={style} /></div>
       <div className="half-now">
-        <div className="half-year">{year}, age {row.age}</div>
-        <div className="half-place">{PLACE_BY_ID[row.place].city}</div>
+        <div className="half-year">{year}{row.lived ? ', lived' : row.projected ? ', projected' : ''}</div>
+        <div className="half-place">{row.route.map((p) => PLACE_BY_ID[p].city).filter((c, i, a) => a.indexOf(c) === i).join(' \u2192 ')}</div>
         <div className="half-role">{row.role}{row.role.toLowerCase().includes(industry.toLowerCase()) ? '' : `, ${industry.toLowerCase()}`}</div>
         <p className="half-line" key={`${id}-${year}`}>{row.narrative}</p>
         <div className="half-stats">
