@@ -558,7 +558,8 @@ export class GlobeScene {
     this.coast = new THREE.LineSegments(cg, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }))
     this.world.add(this.coast)
 
-    this.buildStart = performance.now()
+    // ?nobuild=1 opens on a finished planet (for shots that start mid story)
+    this.buildStart = new URLSearchParams(window.location.search).has('nobuild') ? -Infinity : performance.now()
   }
 
   setSim(sim: SimResult) {
@@ -1033,6 +1034,16 @@ export class GlobeScene {
       if (pop) {
         const pl = PLACE_BY_ID[pop]
         this.place(this.popupEl, latLonToVec3(pl.lat, pl.lon, 1.01), true)
+        // keep the whole card on screen
+        const m = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(this.popupEl.style.transform)
+        const card = this.popupEl.firstElementChild as HTMLElement | null
+        if (m && card) {
+          const w = this.host.clientWidth, hh = this.host.clientHeight
+          const x = Math.min(Math.max(Number(m[1]), 20), w - card.offsetWidth - 60)
+          const y = Math.min(Math.max(Number(m[2]), 80), hh - card.offsetHeight - 20)
+          this.popupEl.style.transform = `translate(${x}px, ${y}px)`
+          this.popupEl.style.opacity = '1'
+        }
       } else this.popupEl.style.opacity = '0'
     }
 
@@ -1068,7 +1079,8 @@ export class GlobeScene {
       const outward = h.clone().normalize()
       const side = new THREE.Vector3().crossVectors(outward, tan).normalize()
       // Chase camera: behind and above the head, looking along the thread
-      this.camGoal.copy(h).addScaledVector(outward, 1.35).addScaledVector(tan, -1.0).addScaledVector(side, 0.45)
+      // Chase camera: far enough behind that the thread reads as a line, not a beam
+      this.camGoal.copy(h).addScaledVector(outward, 1.9).addScaledVector(tan, -1.3).addScaledVector(side, 0.6)
       this.lookGoal.copy(h).addScaledVector(tan, 0.25).lerp(new THREE.Vector3(0, 0, 0), 0.35)
       const kk = 1 - Math.exp(-dt * 1.4)
       this.camera.position.lerp(this.camGoal, kk)
