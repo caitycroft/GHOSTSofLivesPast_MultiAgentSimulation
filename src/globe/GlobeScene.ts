@@ -988,7 +988,9 @@ export class GlobeScene {
         th.ghosts.material.uniforms.uFocus.value = f
         threadPoint(rows, i, t, tmp)
         headPos.setXYZ(i, tmp.x, tmp.y, tmp.z)
-        this.place(th.label, tmp, f > 0.5)
+        // A ghost's label appears once it has split off the real thread
+        const fork = SELVES[i].fork?.year
+        this.place(th.label, tmp, f > 0.5 && (!fork || t >= fork))
         const row = rows[Math.min(rows.length - 1, year - CLOCK.start)]
         occupied.set(row.place, (occupied.get(row.place) ?? 0) + 1)
         if (th.selfId === this.focusId || (!this.focusId && SELVES[i].real)) {
