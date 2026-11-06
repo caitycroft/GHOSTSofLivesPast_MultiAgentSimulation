@@ -116,13 +116,13 @@ export function buildCuts(f) {
         length: '60s', platforms: ['Reels', 'TikTok', 'Shorts', 'LinkedIn', 'X'], transition: tr, td: td * 0.85,
         segments: style === 'arcade'
           ? [seg(S.hook, 0, 8.4), seg(S.real, 0.4, 10.9), seg(S.forks, 0, 12), seg(S.tour, 3.5, 10.5, { captions: S.tour.captions.slice(1, 3) }), seg(S.how, 0, 9), seg(S.lives, 0.5, 8.3), seg(S.outro, 0, 8)]
-          : [seg(S.hook, 1.5, 9.9), seg(S.real, 0, 12), seg(S.forks, 0, 10), seg(S.tour, 3.5, 10.5, { captions: S.tour.captions.slice(1, 3) }), seg(S.how, 0, 9), seg(S.outro, 0, 8)],
+          : [seg(S.hook, 1.5, 9.9), seg(S.real, 0, 12), seg(S.forks, 0, 10), seg(S.tour, 3.5, 10.5, { captions: S.tour.captions.slice(1, 3) }), seg(S.time, 0.5, 7.2, { captions: S.time.captions.slice(0, 1) }), seg(S.how, 0, 9), seg(S.outro, 0, 8)],
       },
       {
         length: '30s', platforms: ['Reels', 'TikTok', 'Shorts', 'X', 'LinkedIn'], transition: tr, td: td * 0.7,
         segments: style === 'arcade'
           ? [seg(S.hook, 0, 8.4), segL(S.forks, 5.2, 12, [{ at: [0.2, 6.6], text: 'Every time I leave a place, the ghost who stayed splits off and lives on without me.' }]), segL(S.tour, 3.5, 10.5, [{ at: [0.1, 3.4], text: 'Each ghost is an agent with my background.' }, { at: [3.6, 6.9], text: 'Same me. Different city. Different life.' }]), segL(S.outro, 0, 8, [{ at: [0.2, 4.6], text: 'Real data, real places, a hundred runs of the world.' }])]
-          : [seg(S.hook, 1.5, 9.9), segL(S.forks, 4.8, 10, [{ at: [0.2, 5.0], text: 'Each time I leave a place, the ghost who stayed splits off.' }]), segL(S.tour, 7, 13.2, [{ at: [0.1, 3.4], text: 'Each ghost is an agent with my background.' }, { at: [3.6, 6.1], text: 'Same me. Different city. Different life.' }]), segL(S.outro, 0, 8, [{ at: [0.2, 4.6], text: 'Real data, real places, a hundred runs of the world.' }])],
+          : [seg(S.hook, 1.5, 9.9), segL(S.forks, 4.2, 10, [{ at: [0.2, 5.6], text: 'Each time I leave a place, the ghost who stayed splits off.' }]), segL(S.tour, 6.2, 13.2, [{ at: [0.1, 3.4], text: 'Each ghost is an agent with my background.' }, { at: [3.6, 6.1], text: 'Same me. Different city. Different life.' }]), segL(S.outro, 0, 8, [{ at: [0.2, 4.6], text: 'Real data, real places, a hundred runs of the world.' }])],
       },
       {
         length: '15s', platforms: ['Reels', 'TikTok', 'Shorts', 'X'], transition: tr, td: 0.4,

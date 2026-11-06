@@ -116,6 +116,7 @@ function timeline(cut) {
 // ------------------------------------------------------------------ render
 const index = []
 const vo = []
+const prompter = [] // timed lines for the teleprompter page
 let n = 0
 const LOOKS = [['arcade', 'Arcade'], ['classic', 'Classic']].filter(([k]) => !only || k === only)
 
@@ -130,6 +131,12 @@ for (const [look, Look] of LOOKS) {
     for (const l of tl.lines) voBlock.push(`| ${mmss(l.t0)} to ${mmss(l.t1)} | ${l.hook ? '**' + l.text + '** (hook: punchy, a touch faster)' : l.text} |`)
     if (tl.end) voBlock.push(`| ${mmss(tl.end.t0)} to ${mmss(tl.end.t1)} | (Title card. Silence, or let the music carry it.) |`)
     vo.push(voBlock.join('\n'))
+    prompter.push({
+      look: Look, length: cut.length, seconds: +tl.total.toFixed(2),
+      files: ['16x9', '9x16'].map((a) => `${name(look, cut, a)}.mp4`),
+      lines: tl.lines.map((l) => ({ t0: +l.t0.toFixed(2), t1: +l.t1.toFixed(2), text: l.text, hook: l.hook })),
+      end: tl.end ? +tl.end.t0.toFixed(2) : null,
+    })
 
     for (const aspect of ['16x9', '9x16']) {
       n++
@@ -223,4 +230,5 @@ if (!dry) {
   writeFileSync('media/final/INDEX.md', `# Ghosts of Lives Past: video deliverables\n\nData snapshot ${facts.asOf.slice(0, 10)}. Every caption is burned into the platform safe zone; the matching .srt sits next to each video for platforms that take caption files. Each video has a silent stereo track, ready for voiceover and music.\n\n| File | Look | Cut | Aspect | Length | Made for |\n|---|---|---|---|---|---|\n${rows.join('\n')}\n`)
 }
 writeFileSync('media/final/VO_SCRIPTS.md', `# Voiceover scripts\n\nOne script per cut. The 16:9 and 9:16 versions of a cut share the same script and timing, and the lines match the burned in captions word for word. Read at an easy pace (about 150 words a minute); each line has to finish by its end time. Start the hook a beat after the video starts.\n\n${vo.join('\n\n')}\n`)
-console.log('wrote media/final/VO_SCRIPTS.md')
+writeFileSync('media/final/scripts.json', JSON.stringify(prompter, null, 1))
+console.log('wrote media/final/VO_SCRIPTS.md and scripts.json')
