@@ -11,7 +11,7 @@ const html = `<title>Lives Past Teleprompter</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
   /* Layout: a reading stage on top (the line to say now, large), the full script below.
      One dark world on purpose: read in a dim room, next to a recording screen. */
@@ -24,14 +24,14 @@ const html = `<title>Lives Past Teleprompter</title>
     --dim: #8b93ab;
     --now: #ffb36b;      /* the warm colour of the life that happened */
     --next: #7cc4ff;     /* the cool colour of the ghosts */
-    --read: "Atkinson Hyperlegible", "Helvetica Neue", Arial, sans-serif;
+    --read: Arial, "Liberation Sans", "Helvetica Neue", sans-serif;
     --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
   }
   html, body { height: 100%; }
   body { background: var(--ink); color: var(--text); font-family: var(--read); font-size: 16px; line-height: 1.45; }
   .wrap { max-width: 1100px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 60px; display: grid; gap: 22px; }
   header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
-  h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.02em; text-wrap: balance; }
+  h1 { margin: 0; font-weight: 700; text-decoration: underline; text-underline-offset: 0.18em; font-size: 1.35rem; letter-spacing: 0.02em; text-wrap: balance; }
   header p { margin: 0; color: var(--dim); max-width: 60ch; }
   .picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
   .picker button { font: inherit; text-align: left; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--stage); color: var(--text); cursor: pointer; display: grid; gap: 2px; }
@@ -55,7 +55,7 @@ const html = `<title>Lives Past Teleprompter</title>
   .controls button.primary { background: var(--now); border-color: var(--now); color: #1a0e02; }
   .hint { color: var(--dim); font-size: 0.9rem; }
   .script { display: grid; gap: 4px; }
-  .script h2 { margin: 0 0 6px; font-size: 1rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+  .script h2 { margin: 0 0 6px; font-weight: 700; text-decoration: underline; text-underline-offset: 0.18em; font-size: 1rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
   .files { font-family: var(--mono); font-size: 0.78rem; color: var(--dim); margin: 0 0 8px; overflow-wrap: anywhere; }
   .row { display: grid; grid-template-columns: 9.5em 1fr; gap: 14px; padding: 8px 10px; border-radius: 8px; }
   .row time { font-family: var(--mono); font-size: 0.85rem; color: var(--dim); font-variant-numeric: tabular-nums; padding-top: 2px; }
