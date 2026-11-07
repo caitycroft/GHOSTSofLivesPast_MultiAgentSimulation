@@ -32,7 +32,7 @@ export const SHOTS = {
 
   // ------------------------------------------------------------------ classic
   c_globe_build: { url: base('cyanotype', 'globe', '&mode=orbit'), duration: 10, steps: [[0, clock(2010, 0.35)]] },
-  c_globe_follow: { url: base('cyanotype', 'globe', '&mode=follow'), duration: 12, steps: [[0, clock(2010.25, 0.45)]] },
+  c_globe_follow: { url: base('cyanotype', 'globe', '&mode=follow&nobuild=1'), duration: 12, steps: [[0, clock(2010.25, 0.45)]] },
   c_loom: { url: base('cyanotype', 'loom'), duration: 10, steps: [[0, clock(2014.4, 1.1)]] },
   c_city_street: { url: base('cyanotype', 'city', '&mode=follow'), duration: 10, steps: [[0, clock(2022.15, 0.5)]] },
   c_globe_tour: { url: base('cyanotype', 'globe', '&mode=follow&nobuild=1'), duration: 14, steps: [[0, clock(2023.7, 0.38)], [0, focus('lon')], [3.5, focus('utah')], [7, focus('nyc')], [10.5, focus('osl')]] },
