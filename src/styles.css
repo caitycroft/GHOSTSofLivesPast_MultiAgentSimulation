@@ -528,3 +528,5 @@ tr.shared { opacity: 0.5; }
 .clean:not(.portrait) .how-card pre { font-size: 13.5px; }
 .cinema .how-card { animation: none; }
 .clean:not(.portrait).view-timeline .layer.scroll, .clean:not(.portrait).view-how .layer.scroll { padding-top: 40px; }
+/* capture: the era colour changes every frame, so a background transition would repaint the whole screen each frame */
+.cinema.app, .cinema .top, .cinema .bottom { transition: none; }
