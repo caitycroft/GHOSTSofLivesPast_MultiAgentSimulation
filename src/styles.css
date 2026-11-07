@@ -513,3 +513,7 @@ tr.shared { opacity: 0.5; }
 .clean.portrait .timeline-view { --lane-h: 72px; }
 /* phone legibility for docked cards in vertical capture */
 .cinema.portrait .popup-anchor .place-card, .cinema.portrait .city-card .place-card { zoom: 1.2; }
+/* capture: no backdrop blur (costly in software rendering; cards are near opaque anyway) */
+.cinema .place-card, .cinema .tooltip, .cinema .panel, .cinema .tabs { backdrop-filter: none; }
+.cinema .place-card { background: rgba(4, 7, 14, 0.94); }
+.cinema.style-arcade .place-card { background: rgba(0, 0, 0, 0.94); }
