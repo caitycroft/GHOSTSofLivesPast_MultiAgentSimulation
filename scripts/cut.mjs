@@ -19,6 +19,9 @@ const arg = (name, fallback) => {
 const fontsDir = arg('fonts', 'media/fonts')
 const only = arg('only', '')
 const dry = process.argv.includes('--dry')
+const onlyAspect = arg('aspect', '')
+const onlyLength = arg('length', '')
+const outDir = arg('out', 'media/final')
 const facts = JSON.parse(readFileSync('media/facts.json', 'utf8'))
 const cuts = buildCuts(facts)
 mkdirSync('media/final', { recursive: true })
@@ -139,6 +142,7 @@ for (const [look, Look] of LOOKS) {
     })
 
     for (const aspect of ['16x9', '9x16']) {
+      if ((onlyAspect && aspect !== onlyAspect) || (onlyLength && cut.length !== onlyLength)) continue
       n++
       const L = LAYOUT[aspect]
       const base = name(look, cut, aspect)
@@ -187,8 +191,8 @@ for (const [look, Look] of LOOKS) {
       parts.push(`[${prev}]subtitles=filename=media/final/${base}.ass:fontsdir=${fontsDir}[v]`)
       const args = ['-y', '-loglevel', 'error', ...inputs, '-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000',
         '-filter_complex', parts.join(';'), '-map', '[v]', '-map', `${tl.segs.length}:a`, '-t', tl.total.toFixed(3),
-        '-c:v', 'libx264', '-preset', 'slow', '-crf', aspect === '9x16' ? '21' : '20', '-pix_fmt', 'yuv420p', '-r', String(FPS),
-        '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', `media/final/${base}.mp4`]
+        '-c:v', 'libx264', '-preset', 'medium', '-crf', aspect === '9x16' ? '21' : '20', '-pix_fmt', 'yuv420p', '-r', String(FPS),
+        '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', `${outDir}/${base}.mp4`]
       if (dry) { console.log(`would render ${base} (${tl.total.toFixed(1)}s)`); continue }
       const t = Date.now()
       const r = spawnSync('ffmpeg', args, { stdio: 'inherit' })
@@ -224,7 +228,7 @@ function wrapHook(text, aspect, look) {
   return out.join('\\N')
 }
 
-if (!dry) {
+if (!dry && !onlyAspect && !onlyLength) {
   index.sort((a, b) => a.n - b.n)
   const rows = index.map((r) => `| ${r.file} | ${r.look} | ${r.length} | ${r.aspect === '9x16' ? '9:16 vertical' : '16:9 horizontal'} | ${r.seconds.toFixed(0)}s | ${r.platforms.join(', ')} |`)
   writeFileSync('media/final/INDEX.md', `# Ghosts of Lives Past: video deliverables\n\nData snapshot ${facts.asOf.slice(0, 10)}. Every caption is burned into the platform safe zone; the matching .srt sits next to each video for platforms that take caption files. Each video has a silent stereo track, ready for voiceover and music.\n\n| File | Look | Cut | Aspect | Length | Made for |\n|---|---|---|---|---|---|\n${rows.join('\n')}\n`)
