@@ -518,5 +518,13 @@ tr.shared { opacity: 0.5; }
 .cinema .place-card { background: rgba(4, 7, 14, 0.94); }
 .cinema.style-arcade .place-card { background: rgba(0, 0, 0, 0.94); }
 /* 16:9 capture: the timeline and how it works views fill the frame */
-.clean:not(.portrait) .timeline-view, .clean:not(.portrait) .how { zoom: 1.25; }
+.clean:not(.portrait) .timeline-view { zoom: 1.25; }
+/* how it works scales by type size: zoom on its animated cards is very slow to composite */
+.clean:not(.portrait) .how { max-width: 1760px; }
+.clean:not(.portrait) .how-col h3 { font-size: 17px; }
+.clean:not(.portrait) .how-card h4 { font-size: 17px; }
+.clean:not(.portrait) .how-card p, .clean:not(.portrait) .how-card li { font-size: 15px; }
+.clean:not(.portrait) .how-card code { font-size: 15px; }
+.clean:not(.portrait) .how-card pre { font-size: 13.5px; }
+.cinema .how-card { animation: none; }
 .clean:not(.portrait).view-timeline .layer.scroll, .clean:not(.portrait).view-how .layer.scroll { padding-top: 40px; }
