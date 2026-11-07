@@ -33,7 +33,7 @@ const WPS_MAX = 3.0 // words per second a voice can read comfortably (hooks may 
 const LAYOUT = {
   '16x9': { w: 1920, h: 1080, cap: 46, hook: 80, hookPx: 52, kick: 22, mL: 260, mR: 260, mV: 105, cx: 960, hookY: 520, endY: 500 },
   // 9:16: keep clear of the top bar, the right hand icon column and the bottom caption area
-  '9x16': { w: 1080, h: 1920, cap: 50, hook: 84, hookPx: 44, kick: 24, mL: 80, mR: 170, mV: 560, cx: 495, hookY: 820, endY: 880 },
+  '9x16': { w: 1080, h: 1920, cap: 52, hook: 96, hookPx: 58, kick: 24, mL: 80, mR: 170, mV: 560, cx: 495, hookY: 820, endY: 880 },
 }
 const C = { white: '&H00FFFFFF', box: '&H38080402', magenta: '&H00D02FFF', cyan: '&H00FFF338', green: '&H007AFF3D', amber: '&H006BB3FF', grey: '&H00C8C8C8', clear: '&HFF000000' }
 
@@ -218,7 +218,7 @@ function platformsFor(cut, aspect) {
 }
 function wrapHook(text, aspect, look) {
   // Big hooks wrap by hand so they sit in the safe zone
-  const max = aspect === '9x16' ? (look === 'arcade' ? 16 : 18) : (look === 'arcade' ? 26 : 30)
+  const max = aspect === '9x16' ? (look === 'arcade' ? 13 : 16) : (look === 'arcade' ? 26 : 30)
   const out = []
   let line = ''
   for (const w of text.split(' ')) {
