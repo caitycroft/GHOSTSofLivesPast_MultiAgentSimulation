@@ -39,15 +39,35 @@ mkdirSync(outDir, { recursive: true })
 const args = software ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] : ['--ignore-gpu-blocklist', '--enable-gpu']
 const browser = await chromium.launch({ args })
 
+// Real time helpers: the page's own timers are frozen by the virtual clock,
+// so waiting is done from Node, and a stalled frame aborts the attempt
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+const within = (p, ms, what) => Promise.race([p, sleep(ms).then(() => { throw new Error(`stalled: ${what}`) })])
+
 for (const id of ids) {
-  const shot = SHOTS[id]
   const out = `${outDir}/${id}.mp4`
   if (skip && existsSync(out)) { console.log(`skip ${id}`); continue }
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      await renderShot(id, out)
+      break
+    } catch (e) {
+      console.warn(`${aspect} ${id}: attempt ${attempt} failed (${e.message.split('\n')[0]})`)
+      if (attempt === 2) throw e
+    }
+  }
+}
+await browser.close()
+
+async function renderShot(id, out) {
+  const shot = SHOTS[id]
   const duration = limit || shot.duration
   const frames = Math.round(duration * fps)
   const frameMs = 1000 / fps
-  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '16', '-pix_fmt', 'yuv420p', out], { stdio: ['pipe', 'inherit', 'inherit'] })
-  const page = await browser.newPage({ viewport: size, deviceScaleFactor: 1 })
+  let ff, page
+  try {
+  ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '16', '-pix_fmt', 'yuv420p', out], { stdio: ['pipe', 'inherit', 'inherit'] })
+  page = await browser.newPage({ viewport: size, deviceScaleFactor: 1 })
   const start = Date.now()
   await page.clock.install({ time: startTime })
   await page.goto(base + shot.url)
@@ -59,10 +79,14 @@ for (const id of ids) {
       if (ahead > 30000) throw e
     }
   }
-  await page.waitForFunction(() => document.fonts.ready.then(() => !!window.__clock && !!window.__app))
-  await page.waitForTimeout(3000) // land mesh, snapshot and fonts load in real time while the clock is frozen
+  for (let i = 0; !(await page.evaluate(() => !!window.__clock && !!window.__app)); i++) {
+    if (i > 240) throw new Error('app never became ready')
+    await sleep(250)
+  }
+  await within(page.evaluate(() => document.fonts.ready.then(() => true)), 60000, 'fonts')
+  await sleep(3000) // land mesh, snapshot and fonts load in real time while the clock is frozen
   const cdp = await page.context().newCDPSession(page)
-  await cdp.send('Animation.enable')
+  await within(cdp.send('Animation.enable'), 90000, 'animation domain')
 
   const steps = [...shot.steps].sort((a, b) => a[0] - b[0])
   let next = 0
@@ -75,8 +99,8 @@ for (const id of ids) {
       next++
     }
     if (f % 15 === 0) await cdp.send('Animation.setPlaybackRate', { playbackRate: Math.min(1, frameMs / realPerFrame) })
-    await page.clock.runFor(frameMs)
-    const buf = await page.screenshot({ type: 'jpeg', quality: 94, timeout: 180000 })
+    await within(page.clock.runFor(frameMs), 240000, `frame ${f} clock`)
+    const buf = await page.screenshot({ type: 'jpeg', quality: 94, timeout: 240000 })
     if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once('drain', r))
     const now = Date.now()
     realPerFrame = realPerFrame * 0.9 + (now - lastReal) * 0.1
@@ -86,5 +110,10 @@ for (const id of ids) {
   await new Promise((r) => ff.on('close', r))
   await page.close()
   console.log(`${aspect} ${id}: ${duration}s in ${((Date.now() - start) / 1000).toFixed(0)}s (${(realPerFrame / 1000).toFixed(2)}s per frame)`)
+  } catch (e) {
+    // a failed attempt leaves nothing running behind it
+    try { ff?.kill('SIGKILL') } catch { /* already gone */ }
+    await page?.close().catch(() => {})
+    throw e
+  }
 }
-await browser.close()
