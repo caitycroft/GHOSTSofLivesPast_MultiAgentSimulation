@@ -66,8 +66,8 @@ Keys: Space play and pause, arrows step a year, 1 to 8 views, C / A / V looks, O
 The walkthrough videos are made from the app itself, frame by frame on a virtual clock, so motion stays smooth on any machine.
 
 1. `scripts/shots.mjs` lists the shots. `node scripts/capture.mjs --aspect 16x9 --prefix a_` renders the arcade shots (add `--software` without a GPU).
-2. `node media/facts.cjs` (built from `scripts/facts.ts`) runs the same simulation on the same snapshot and records the outcomes the captions quote.
-3. `scripts/cuts.mjs` is the edit list for every film and length; `node scripts/cut.mjs` joins the shots with transitions, burns captions into the platform safe zones, and writes matching `.srt` files and `VO_SCRIPTS.md`.
+2. `npm run facts` bundles `scripts/facts.ts`, runs the same simulation on the same snapshot, and writes the outcomes the captions quote to `media/facts.json`.
+3. `scripts/cuts.mjs` is the edit list for every film and length. `npm run cut` joins the shots with transitions, burns captions into the platform safe zones, writes matching `.srt` files, `VO_SCRIPTS.md` and `INDEX.md`, and builds `media/final/teleprompter.html`, a timed voiceover prompter. Filter with `node scripts/cut.mjs --only arcade --aspect 9x16 --length 30s`.
 
 Needs ffmpeg with libass, Playwright Chromium, and the caption fonts in `media/fonts` (Liberation Sans and Press Start 2P as .ttf).
 
