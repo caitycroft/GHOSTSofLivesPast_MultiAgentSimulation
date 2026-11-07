@@ -744,6 +744,8 @@ export class GlobeScene {
   }
 
   setMode(mode: CameraMode, focusId: string | null) {
+    // a new focus shows its own place card straight away
+    if (focusId !== this.focusId) { this.lastStop = null; this.popAt = -Infinity }
     this.mode = mode
     this.focusId = focusId
     // Any deliberate camera choice ends the opening dolly
