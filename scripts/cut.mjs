@@ -46,7 +46,7 @@ function header(look, L) {
         f('Cap', 'Liberation Sans', L.cap, C.white, C.magenta, '&H00000000', true, 1, 2.2, 0, 2, L.mL, L.mR, L.mV),
         f('Hook', 'Press Start 2P', L.hookPx, C.white, C.magenta, '&H00000000', false, 1, 4, 0, 5, 0, 0, 0, 2),
         f('Title', 'Press Start 2P', L.hookPx + 4, C.white, C.magenta, '&H00000000', false, 1, 4, 0, 5, 0, 0, 0, 4),
-        f('Sub', 'Liberation Sans', L.kick + 6, C.cyan, '&H00000000', '&H00000000', true, 1, 0, 0, 5, 0, 0, 0, 3),
+        f('Sub', 'Liberation Sans', L.kick + 6, C.cyan, '&H00000000', '&H00000000', true, 1, L.h > L.w ? 2.5 : 0, 0, 5, 0, 0, 0, 3),
       ]
     : [
         f('Box', 'Liberation Sans', L.cap, C.clear, C.box, C.box, true, 3, 18, 0, 2, L.mL, L.mR, L.mV),
@@ -166,8 +166,12 @@ for (const [look, Look] of LOOKS) {
       })
       if (tl.end) {
         const fx = look === 'arcade' ? '\\blur3' : ''
-        ass += `Dialogue: 1,${ts(tl.end.t0)},${ts(tl.end.t1)},Title,,0,0,0,,{\\pos(${L.cx},${L.endY})\\fad(500,0)${fx}}GHOSTS OF LIVES PAST\n`
-        ass += `Dialogue: 1,${ts(tl.end.t0 + 0.4)},${ts(tl.end.t1)},Sub,,0,0,0,,{\\pos(${L.cx},${L.endY + (aspect === '9x16' ? 110 : 90)})\\fad(500,0)}The Unlived Lives \\h\\h·\\h\\h a multi agent simulation\n`
+        // Vertical: two short lines each, so the card clears the right hand icon column
+        const tall = aspect === '9x16'
+        const title = tall ? 'GHOSTS OF\\NLIVES PAST' : 'GHOSTS OF LIVES PAST'
+        const sub = tall ? 'The Unlived Lives\\Na multi agent simulation' : 'The Unlived Lives \\h\\h·\\h\\h a multi agent simulation'
+        ass += `Dialogue: 1,${ts(tl.end.t0)},${ts(tl.end.t1)},Title,,0,0,0,,{\\pos(${L.cx},${L.endY})\\fad(500,0)${fx}}${title}\n`
+        ass += `Dialogue: 1,${ts(tl.end.t0 + 0.4)},${ts(tl.end.t1)},Sub,,0,0,0,,{\\pos(${L.cx},${L.endY + (tall ? 190 : 90)})\\fad(500,0)}${sub}\n`
       }
       writeFileSync(`media/final/${base}.ass`, ass)
       writeFileSync(`media/final/${base}.srt`, srt)
