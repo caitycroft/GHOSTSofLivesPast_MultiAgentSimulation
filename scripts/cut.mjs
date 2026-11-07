@@ -228,7 +228,7 @@ function wrapHook(text, aspect, look) {
   return out.join('\\N')
 }
 
-if (!dry && !onlyAspect && !onlyLength) {
+if (!only && !onlyAspect && !onlyLength) {
   index.sort((a, b) => a.n - b.n)
   const rows = index.map((r) => `| ${r.file} | ${r.look} | ${r.length} | ${r.aspect === '9x16' ? '9:16 vertical' : '16:9 horizontal'} | ${r.seconds.toFixed(0)}s | ${r.platforms.join(', ')} |`)
   writeFileSync('media/final/INDEX.md', `# Ghosts of Lives Past: video deliverables\n\nData snapshot ${facts.asOf.slice(0, 10)}. Every caption is burned into the platform safe zone; the matching .srt sits next to each video for platforms that take caption files. Each video has a silent stereo track, ready for voiceover and music.\n\n| File | Look | Cut | Aspect | Length | Made for |\n|---|---|---|---|---|---|\n${rows.join('\n')}\n`)
