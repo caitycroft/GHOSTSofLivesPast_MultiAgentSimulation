@@ -1102,8 +1102,9 @@ export class GlobeScene {
       if (far) this.viewDir.copy(goal)
       else this.viewDir.lerp(goal, 1 - Math.exp(-dt * rate)).normalize()
       // a slow sway around the poles, so the globe is always gently turning
-      const dir = this.viewDir.clone().applyAxisAngle(UP, Math.sin(time * 0.08) * 0.7)
-      const camDir = dir.clone().add(new THREE.Vector3(0, 0.32, 0)).normalize()
+      // (about 17 degrees either side, at most 2 degrees a second, so the life stays in the middle)
+      const dir = this.viewDir.clone().applyAxisAngle(UP, Math.sin(time * 0.12) * 0.3)
+      const camDir = dir.clone().add(new THREE.Vector3(0, 0.2, 0)).normalize()
       if (camDir.y > 0.86) camDir.setY(0.86).normalize()
       this.camGoal.copy(camDir).multiplyScalar(3.1)
       this.lookGoal.copy(dir).multiplyScalar(0.35)
