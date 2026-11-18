@@ -27,7 +27,7 @@ const cuts = buildCuts(facts)
 mkdirSync('media/final', { recursive: true })
 
 const FPS = 30
-const WPS_MAX = 3.0 // words per second a voice can read comfortably (hooks may run hotter)
+const WPS_MAX = 2.85 // words per second a voice can read comfortably and a viewer can follow (hooks may run hotter)
 
 // ------------------------------------------------------------------ ASS
 const LAYOUT = {
