@@ -1107,7 +1107,9 @@ export class GlobeScene {
       const camDir = dir.clone().add(new THREE.Vector3(0, 0.2, 0)).normalize()
       if (camDir.y > 0.86) camDir.setY(0.86).normalize()
       this.camGoal.copy(camDir).multiplyScalar(3.1)
-      this.lookGoal.copy(dir).multiplyScalar(0.85) // the surface under the life, so it sits mid frame
+      // landscape: the surface under the life, so it sits mid frame; portrait: aim
+      // further in, so the life sits low and the place card has the top of the frame
+      this.lookGoal.copy(dir).multiplyScalar(this.host.clientWidth < this.host.clientHeight ? 0.3 : 0.85)
       const kk = far ? 1 : 1 - Math.exp(-dt * 2.5)
       this.camera.position.lerp(this.camGoal, kk)
       this.look.lerp(this.lookGoal, kk)
