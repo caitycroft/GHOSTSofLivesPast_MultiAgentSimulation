@@ -24,7 +24,7 @@ export const EVENT_KINDS: { id: EventKind; label: string; color: string }[] = [
 export const EVENTS: TimelineEvent[] = [
   // Macroeconomy
   { year: 2010, month: 5, kind: 'macro', label: 'Eurozone debt crisis', detail: 'Greece receives the first bailout and the euro crisis begins.', wiki: 'European_debt_crisis' },
-  { year: 2010, month: 11, kind: 'macro', label: 'QE2', detail: 'The Federal Reserve starts a second round of quantitative easing; money stays nearly free.', wiki: 'Quantitative_easing' },
+  { year: 2010, month: 11, kind: 'macro', label: 'Fed eases again (QE2)', detail: 'The Federal Reserve starts a second round of quantitative easing; money stays nearly free.', wiki: 'Quantitative_easing' },
   { year: 2020, month: 3, kind: 'macro', label: 'Rates cut to zero', detail: 'Markets crash as the pandemic spreads and central banks cut rates to zero.', wiki: '2020_stock_market_crash' },
   { year: 2021, kind: 'macro', label: 'Record venture funding', detail: 'Venture investment hits an all time high on zero rates and stimulus.', wiki: 'Venture_capital' },
   { year: 2022, month: 3, kind: 'macro', label: 'Rate hikes begin', detail: 'Inflation surges and the Fed starts its fastest hiking cycle in decades.', wiki: '2021%E2%80%932023_inflation_surge' },
@@ -40,7 +40,7 @@ export const EVENTS: TimelineEvent[] = [
   { year: 2018, kind: 'geo', label: 'US China trade war', detail: 'Tariffs between the two largest economies begin a long decoupling.', wiki: 'China%E2%80%93United_States_trade_war' },
   { year: 2022, month: 2, kind: 'geo', label: 'Ukraine invaded', detail: 'Russia launches a full scale invasion of Ukraine; energy prices spike across Europe.', wiki: 'Russian_invasion_of_Ukraine' },
   { year: 2023, month: 10, kind: 'geo', label: 'War in Gaza', detail: 'War between Israel and Hamas begins after the October 7 attacks.', wiki: 'Gaza_war' },
-  { year: 2024, kind: 'geo', label: 'The election year', detail: 'Countries holding about half the world’s population vote in a single year.', wiki: 'List_of_elections_in_2024' },
+  { year: 2024, kind: 'geo', label: 'Global election year', detail: 'Countries holding about half the world’s population vote in a single year.', wiki: 'List_of_elections_in_2024' },
 
   // Technology
   { year: 2010, month: 10, kind: 'tech', label: 'Instagram launches', detail: 'The camera becomes a social network.', wiki: 'Instagram' },
@@ -54,17 +54,17 @@ export const EVENTS: TimelineEvent[] = [
   { year: 2020, month: 6, kind: 'tech', label: 'GPT-3', detail: 'A language model writes convincing prose at scale.', wiki: 'GPT-3' },
   { year: 2021, month: 10, kind: 'tech', label: 'Facebook becomes Meta', detail: 'The metaverse becomes a company strategy.', wiki: 'Meta_Platforms' },
   { year: 2022, month: 11, kind: 'tech', label: 'ChatGPT', detail: 'A chatbot reaches a hundred million users in about two months.', wiki: 'ChatGPT' },
-  { year: 2023, month: 8, kind: 'tech', label: 'Gaussian splatting', detail: 'A new way to capture real places as radiance fields renders in real time.', wiki: 'Gaussian_splatting' },
+  { year: 2023, month: 8, kind: 'tech', label: 'Gaussian splatting', detail: 'A new technique captures real places in 3D and renders them in real time.', wiki: 'Gaussian_splatting' },
   { year: 2024, month: 2, kind: 'tech', label: 'Vision Pro ships', detail: 'Spatial computing reaches a mainstream platform.', wiki: 'Apple_Vision_Pro' },
   { year: 2025, kind: 'tech', label: 'Generated worlds', detail: 'World models start generating explorable 3D places from prompts and images.', wiki: 'Generative_artificial_intelligence' },
 
   // Culture and industry
   { year: 2011, month: 7, kind: 'culture', label: 'Spotify in the US', detail: 'Streaming arrives for American listeners.', wiki: 'Spotify' },
   { year: 2013, month: 2, kind: 'culture', label: 'House of Cards', detail: 'Netflix releases a whole season at once and the streaming originals era begins.', wiki: 'House_of_Cards_(American_TV_series)' },
-  { year: 2013, month: 10, kind: 'culture', label: 'EDM goes public', detail: 'SFX Entertainment lists on the stock market, buying up festivals.', wiki: 'SFX_Entertainment' },
-  { year: 2016, month: 2, kind: 'culture', label: 'Festival bust', detail: 'SFX Entertainment files for bankruptcy.', wiki: 'SFX_Entertainment' },
+  { year: 2013, month: 10, kind: 'culture', label: 'SFX goes public', detail: 'SFX Entertainment lists on the stock market, buying up festivals.', wiki: 'SFX_Entertainment' },
+  { year: 2016, month: 2, kind: 'culture', label: 'SFX goes bankrupt', detail: 'SFX Entertainment, the festival roll up, files for bankruptcy.', wiki: 'SFX_Entertainment' },
   { year: 2019, month: 11, kind: 'culture', label: 'Streaming wars', detail: 'Disney+ launches and every studio becomes a streamer.', wiki: 'Disney%2B' },
-  { year: 2020, month: 3, kind: 'culture', label: 'Live music stops', detail: 'Tours and festivals worldwide are cancelled.', wiki: 'Impact_of_the_COVID-19_pandemic_on_the_music_industry' },
+  { year: 2020, month: 3, kind: 'culture', label: 'COVID shuts live music', detail: 'Lockdowns cancel tours and festivals worldwide.', wiki: 'Impact_of_the_COVID-19_pandemic_on_the_music_industry' },
   { year: 2021, month: 3, kind: 'culture', label: 'The NFT sale', detail: 'A Beeple artwork sells as an NFT for 69 million dollars.', wiki: 'Everydays:_the_First_5000_Days' },
   { year: 2023, month: 5, kind: 'culture', label: 'Hollywood strikes', detail: 'Writers, then actors, strike over streaming pay and AI.', wiki: '2023_Writers_Guild_of_America_strike' },
 
@@ -73,8 +73,8 @@ export const EVENTS: TimelineEvent[] = [
   { year: 2012, kind: 'life', label: 'On the lot', detail: 'Interns at Warner Bros., De Line Pictures on the Warner Bros. lot, and MGM; DJs as Parker + Barrow.' },
   { year: 2014, kind: 'life', label: 'EDC on graduation day', detail: 'Graduates from USC and books EDC the same day.' },
   { year: 2015, kind: 'life', label: 'Burning Man, Lightning in a Bottle', detail: 'Plays Burning Man and Lightning in a Bottle; touring and producing, living between Los Angeles and Stockholm.' },
-  { year: 2017, kind: 'life', label: 'Between LA and Stockholm', detail: 'Touring and producing, with trips to the High Coast, Mallorca and Utah.' },
-  { year: 2020, kind: 'life', label: 'Into venture', detail: 'Moves into venture capital during COVID, living between Los Angeles, Hawaii and Utah.' },
+  { year: 2017, kind: 'life', label: 'Living between LA and Stockholm', detail: 'Touring and producing, with trips to the High Coast, Mallorca and Utah.' },
+  { year: 2020, kind: 'life', label: 'Into venture', detail: 'Moves into venture capital during the COVID lockdowns, living between Los Angeles, Hawaii and Utah.' },
   { year: 2022, kind: 'life', label: 'NYU ITP / IMA', detail: 'Starts the Interactive Telecommunications and Interactive Media Arts creative technology program in New York.' },
   { year: 2023, kind: 'life', label: 'London, Berlin, Oslo', detail: 'Stints in London, Berlin and Oslo during the program.' },
   { year: 2024, month: 4, kind: 'life', label: 'Svalbard Ski Marathon', detail: 'Skis the Svalbard Ski Marathon in the Arctic.' },

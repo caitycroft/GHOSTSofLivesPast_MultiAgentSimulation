@@ -69,7 +69,7 @@ function useEraTheme() {
 }
 
 // Void and arcade type each line out like a game dialogue box
-function Typewriter({ text, cps = 38 }: { text: string; cps?: number }) {
+function Typewriter({ text, cps = 45 }: { text: string; cps?: number }) {
   const [n, setN] = useState(0)
   useEffect(() => {
     setN(0)

@@ -14,6 +14,8 @@ import { latLonToVec3, type LandData } from '../lib/geo'
 import { buildThreadGeometry, radiusAt, threadPoint } from './threads'
 import { locate } from '../sim/route'
 
+const UP = new THREE.Vector3(0, 1, 0)
+
 export type CameraMode = 'orbit' | 'follow' | 'tour'
 
 const CYANOTYPE = new THREE.Color('#3b7dff')
@@ -401,6 +403,8 @@ export class GlobeScene {
   private camGoal = new THREE.Vector3()
   private lookGoal = new THREE.Vector3()
   private look = new THREE.Vector3()
+  private viewDir = new THREE.Vector3(0, 0.4, 1).normalize()
+  private focusAt = -Infinity
 
   constructor(private host: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' })
@@ -745,7 +749,7 @@ export class GlobeScene {
 
   setMode(mode: CameraMode, focusId: string | null) {
     // a new focus shows its own place card straight away
-    if (focusId !== this.focusId) { this.lastStop = null; this.popAt = -Infinity }
+    if (focusId !== this.focusId) { this.lastStop = null; this.popAt = -Infinity; this.focusAt = performance.now() }
     this.mode = mode
     this.focusId = focusId
     // Any deliberate camera choice ends the opening dolly
@@ -978,7 +982,6 @@ export class GlobeScene {
     const occupied = new Map<string, number>()
     const tmp = new THREE.Vector3()
     let focusHead: THREE.Vector3 | null = null
-    let focusTan: THREE.Vector3 | null = null
     const reveal = Math.max(0, (this.build - 0.75) / 0.25)
     if (this.sim) {
       this.threads.forEach((th, i) => {
@@ -999,8 +1002,10 @@ export class GlobeScene {
         const row = rows[Math.min(rows.length - 1, year - CLOCK.start)]
         occupied.set(row.place, (occupied.get(row.place) ?? 0) + 1)
         if (th.selfId === this.focusId || (!this.focusId && SELVES[i].real)) {
-          focusHead = tmp.clone()
-          focusTan = threadPoint(rows, i, Math.min(CLOCK.end, t + 0.35)).sub(threadPoint(rows, i, Math.max(CLOCK.start, t - 0.35))).normalize()
+          // where this life is on average over two years, so the camera rides out
+          // back and forth trips instead of following each one
+          focusHead = new THREE.Vector3()
+          for (let k = -4; k <= 4; k++) focusHead.add(threadPoint(rows, i, Math.min(CLOCK.end, Math.max(CLOCK.start, t + k * 0.25))))
         }
       })
       headPos.needsUpdate = true
@@ -1084,16 +1089,25 @@ export class GlobeScene {
       this.controls.target.lerp(new THREE.Vector3(0, 0, 0), 1 - Math.exp(-dt * 2))
       this.controls.update()
     } else {
+      // Follow: the globe turns slowly under the camera and keeps the focused
+      // life in view. The view eases toward where that life is, smoothed over
+      // seconds, so trips back and forth read as a calm drift, not a chase.
+      if (this.controls.enabled) this.viewDir.copy(this.camera.position).normalize()
       this.controls.enabled = false
-      const h = focusHead as THREE.Vector3
-      const tan = focusTan as unknown as THREE.Vector3
-      const outward = h.clone().normalize()
-      const side = new THREE.Vector3().crossVectors(outward, tan).normalize()
-      // Chase camera: behind and above the head, looking along the thread
-      // Chase camera: far enough behind that the thread reads as a line, not a beam
-      this.camGoal.copy(h).addScaledVector(outward, 1.9).addScaledVector(tan, -1.3).addScaledVector(side, 0.6)
-      this.lookGoal.copy(h).addScaledVector(tan, 0.25).lerp(new THREE.Vector3(0, 0, 0), 0.35)
-      const kk = 1 - Math.exp(-dt * 1.4)
+      const goal = (focusHead as THREE.Vector3).clone().normalize()
+      // straight into place when arriving from far away (a page opened in follow)
+      const far = this.camera.position.length() > 6
+      // a new focus flies over a little quicker than the drift within one life
+      const rate = nowMs - this.focusAt < 2500 ? 1.3 : 0.6
+      if (far) this.viewDir.copy(goal)
+      else this.viewDir.lerp(goal, 1 - Math.exp(-dt * rate)).normalize()
+      // a slow sway around the poles, so the globe is always gently turning
+      const dir = this.viewDir.clone().applyAxisAngle(UP, Math.sin(time * 0.08) * 0.7)
+      const camDir = dir.clone().add(new THREE.Vector3(0, 0.32, 0)).normalize()
+      if (camDir.y > 0.86) camDir.setY(0.86).normalize()
+      this.camGoal.copy(camDir).multiplyScalar(3.1)
+      this.lookGoal.copy(dir).multiplyScalar(0.35)
+      const kk = far ? 1 : 1 - Math.exp(-dt * 2.5)
       this.camera.position.lerp(this.camGoal, kk)
       this.look.lerp(this.lookGoal, kk)
       this.camera.lookAt(this.look)

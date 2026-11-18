@@ -28,6 +28,8 @@ const selves = Object.fromEntries(SELVES.map((s) => {
     in2026: { city: PLACE_BY_ID[r2026.place].city, role: r2026.role, band: r2026.incomeBand },
     in2031: { city: PLACE_BY_ID[r2031.place].city, role: r2031.role, band: r2031.incomeBand, industry: r2031.industry },
     pivots: rows.filter((r) => r.event?.kind === 'pivot').map((r) => `${r.year}: ${r.event!.label}`),
+    // where this self is working in 2031, across all runs (industry: runs)
+    ends: sim.industryIn2031[s.id],
   }]
 }))
 

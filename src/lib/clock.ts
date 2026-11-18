@@ -10,7 +10,7 @@ export interface ClockState {
   speed: number // years per second
 }
 
-let state: ClockState = { t: CLOCK.start, playing: true, speed: 0.55 }
+let state: ClockState = { t: CLOCK.start, playing: true, speed: 0.25 }
 const listeners = new Set<() => void>()
 
 export const clock = {

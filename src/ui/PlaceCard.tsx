@@ -80,9 +80,9 @@ export function PlaceCard({ placeId, year, sim, weather, signals, style }: Props
       )}
       {stayer && stayerRows && (
         <div className="pc-ghost" style={{ ['--c' as string]: color(stayer.id) }}>
-          <b>{stayer.name}</b> forks here in {stayer.fork!.year}
-          {y >= stayer.fork!.year ? `: ${stayerRows[y - CLOCK.start].role} in ${PLACE_BY_ID[stayerRows[y - CLOCK.start].place].city}` : ''}
-          {', heading to '}{stayerRows[stayerRows.length - 1].role.toLowerCase()} by {CLOCK.end}.
+          <b>{stayer.name}</b> stays here in {stayer.fork!.year}.
+          {y >= stayer.fork!.year && y < CLOCK.end ? ` ${y}: ${stayerRows[y - CLOCK.start].role}, ${PLACE_BY_ID[stayerRows[y - CLOCK.start].place].city}.` : ''}
+          {` ${CLOCK.end}: ${stayerRows[stayerRows.length - 1].role}, ${PLACE_BY_ID[stayerRows[stayerRows.length - 1].place].city}.`}
         </div>
       )}
     </div>

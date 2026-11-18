@@ -74,6 +74,12 @@ const PIVOTS: Record<IndustryId, IndustryId[]> = {
 }
 
 const GLYPHS = ['△', '◇', '✶', '⬡', '✦', '✧']
+
+// How a pivot reads in a sentence ("now in AI", not "now in ai")
+const PIVOT_NAME: Record<IndustryId, string> = {
+  film: 'film', music: 'music', platforms: 'tech', venture: 'venture capital', xr: 'games and XR',
+  web3: 'Web3', ai: 'AI', worldmodels: 'world models', local: 'the local economy',
+}
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 const MOVABLE = PLACES.filter((p) => p.kind !== 'waypoint')
 
@@ -230,8 +236,8 @@ export function runWorld(
           if (options.length && rnd() < 0.4) {
             const next = options.sort((x, y) => row[y].value - row[x].value)[0]
             a.industry = next
-            a.role = `${a.role.split(',')[0]}, now in ${INDUSTRY_BY_ID[next].label.toLowerCase()}`
-            events[a.self.id] = { kind: 'pivot', label: `Pivots to ${INDUSTRY_BY_ID[next].label.toLowerCase()}`, glyph: '↻' }
+            a.role = `${a.role.split(',')[0]}, now in ${PIVOT_NAME[next]}`
+            events[a.self.id] = { kind: 'pivot', label: `Pivots to ${PIVOT_NAME[next]}`, glyph: '↻' }
           }
         }
       }
@@ -267,7 +273,7 @@ export function runWorld(
       a.capital = clamp(a.capital + wx * 0.3 * founder + macro * 0.15 - (p.costBand - 3) * 0.05 + (rnd() - 0.5) * 0.12 * founder, 0.5, 5)
       const score = a.capital * 0.6 + a.craft * 0.25 + a.network * 0.15
       const band = clamp(Math.round(score - 0.4), 1, 5) as PathRow['incomeBand']
-      const seedN = Math.floor(rnd() * 1000)
+      rnd() // once picked a narrative line; still drawn so every run's random stream is unchanged
       paths[a.self.id].push({
         year,
         place: a.place,
@@ -279,7 +285,7 @@ export function runWorld(
         network: Math.round((a.network / 5) * 100),
         craft: a.craft,
         capital: a.capital,
-        narrative: narrative[a.self.id] ?? narrate(a.industry, eraAt(year).id, p.city, a.role, seedN),
+        narrative: narrative[a.self.id] ?? narrate(a.industry, eraAt(year).id, p.city, a.role, year + agents.indexOf(a), !!a.self.real),
         lived: !a.free,
         projected: year > NOW_YEAR,
         event: events[a.self.id],

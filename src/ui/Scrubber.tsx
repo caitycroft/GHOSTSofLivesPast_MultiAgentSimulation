@@ -58,8 +58,9 @@ export function Scrubber({ weather }: { weather: WeatherTable }) {
         <div className="head" style={{ left: `${pct(t)}%` }}><span>{Math.floor(t)}</span></div>
       </div>
       <div className="speed">
-        {[0.25, 0.55, 1.2].map((s) => (
-          <button key={s} className={speed === s ? 'on' : ''} onClick={() => clock.set({ speed: s })}>{s === 0.25 ? 'slow' : s === 0.55 ? 'film' : 'fast'}</button>
+        {/* years per second: film gives each year about four seconds, time to read its line */}
+        {[0.12, 0.25, 0.6].map((s) => (
+          <button key={s} className={speed === s ? 'on' : ''} onClick={() => clock.set({ speed: s })}>{s === 0.12 ? 'slow' : s === 0.25 ? 'film' : 'fast'}</button>
         ))}
       </div>
     </div>

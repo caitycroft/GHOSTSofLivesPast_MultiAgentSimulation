@@ -54,13 +54,15 @@ export const PLACES: Place[] = [
   },
   {
     id: 'sto', city: 'Stockholm', country: 'Sweden', iso3: 'SWE', lat: 59.33, lon: 18.07, kind: 'lived', costBand: 4, connection: 3.9,
-    industries: { music: 0.9, platforms: 0.8, xr: 0.6, venture: 0.4, ai: 0.3, film: 0.3, web3: 0.3, local: 0.5 },
+    industries: { music: 0.9, platforms: 0.8, xr: 0.6, venture: 0.4, ai: 0.3, worldmodels: 0.3, film: 0.3, web3: 0.3, local: 0.5 },
     blurb: 'Spotify, Klarna, King and Mojang, plus one of the world’s most productive pop songwriting scenes.',
     lived: '2015 to 2019, between Los Angeles and Stockholm',
     paths: [
       p('sto_pop', 'Pop producer in the Swedish songwriting scene', 'Producer and songwriter', 'music', 3, 2, 1, 0.5),
       p('sto_stream', 'Product design at a streaming scale up', 'Product designer', 'platforms', 2, 2, 1, 0.0),
-      p('sto_games', 'Game art in the Stockholm games cluster', 'Game artist', 'xr', 3, 1, 1, 0.3),
+      p('sto_games', 'Game development in the Stockholm games cluster', 'Game developer', 'xr', 3, 1, 1, 0.3),
+      // the same engine skills, once AI starts generating 3D worlds
+      p('sto_wm', 'Real time 3D and AI worlds at a Stockholm games studio', 'World model developer', 'worldmodels', 4, 2, 1, 0.4),
     ],
   },
   {
@@ -155,7 +157,7 @@ export const PLACES: Place[] = [
     paths: [
       p('sf_lab', 'Frontier lab partnerships', 'Partnerships lead', 'ai', 3, 4, 1, -0.1),
       p('sf_wm', 'World models and spatial computing', 'Creative technologist', 'worldmodels', 3, 3, 1, 0.5, 'spatial'),
-      p('sf_founder', 'Founder', 'Founder', 'ai', 3, 3, 2, 0.9),
+      p('sf_founder', 'AI startup founder', 'Founder', 'ai', 3, 3, 2, 0.9),
     ],
   },
 

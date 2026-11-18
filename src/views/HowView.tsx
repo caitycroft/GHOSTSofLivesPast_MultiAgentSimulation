@@ -63,8 +63,8 @@ export function HowView({ sim, live, focusId }: { sim: SimResult; live: Live; fo
           </div>
           <div className="how-card formula">
             <h4>At every fork</h4>
-            <code>score = fit + 0.9 &times; weather + 0.4 &times; local economy + risk + pull of others &minus; distance + stay</code>
-            <p>Weather is the industry's growth that year: the era baseline bent by attention and GDP. Choices are drawn with a softmax, so the same self can live differently on another run.</p>
+            <code>score = fit + 0.9 &times; weather + 0.4 &times; local economy + risk + others in the city &minus; distance + stay</code>
+            <p>Weather is how fast an industry is growing that year: a baseline for the era, adjusted by Wikipedia attention and GDP growth. Choices are random draws weighted by score (a softmax), so the same self can live differently on another run.</p>
           </div>
           <div className="how-card">
             <h4>Between forks</h4>

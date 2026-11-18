@@ -95,7 +95,7 @@ export function LifeCard({ self, sim, year, onOpen }: { self: Self; sim: SimResu
       <dl className="card-meta">
         <dt>Now, {NOW_YEAR}</dt><dd>{PLACE_BY_ID[now.place].city}, {industryLabel(now.industry)}</dd>
         <dt>Heading, {CLOCK.end}</dt><dd>{PLACE_BY_ID[end.place].city}, {end.role}</dd>
-        <dt>Odds</dt><dd>{self.real ? `Lived to ${NOW_YEAR}; next move in ${odds.count} of ${sim.runs} runs` : `This fork in ${odds.count} of ${sim.runs} runs`}</dd>
+        <dt>Odds</dt><dd>{self.real ? `Lived through ${NOW_YEAR}; this next move in ${odds.count} of ${sim.runs} runs` : `She takes this path in ${odds.count} of ${sim.runs} runs`}</dd>
       </dl>
       <p className="sentence">{self.sentence}</p>
     </article>

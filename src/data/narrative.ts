@@ -1,82 +1,98 @@
 import type { IndustryId } from './eras'
 
-// Narrative templates per industry and era for the ghosts (PRD 3.2). First
-// person, plain. {city} and {role} are filled in by the simulation. The real
-// thread uses the lived lines in lived.ts instead. Rewrite freely.
+// What each ghost is doing, per industry and era (PRD 3.2). Ghosts are
+// written in the third person ("she"); the real thread is first person and
+// uses the lived lines in lived.ts instead. Plain and concrete, one short
+// sentence each, so a line can be read before the year turns over.
+// {city} is filled in by the simulation. Rewrite freely.
 type Templates = Partial<Record<string, string[]>>
 
 export const NARRATIVE: Record<IndustryId, Templates> = {
   film: {
-    festival: ['In {city} I read scripts until the slate felt like a calendar.', 'I learned how a studio says yes in {city}.'],
-    platform: ['The studio in {city} started asking how a story would trend.', 'Every pitch in {city} now came with a streaming number.'],
-    pandemic: ['Every set in {city} went dark and we cut films over video calls.', 'In {city} the release calendar became a streaming queue.'],
-    reset: ['In {city} the writers walked out and I walked out with them.', 'Budgets shrank in {city} and the slate got braver.'],
-    ai: ['In {city} the tools started drawing the storyboards.', 'I spent the year in {city} teaching a model what a good cut feels like.'],
-    worldmodels: ['In {city} we stopped shooting places and started generating them.', 'My last picture in {city} was a world you could walk around in.'],
+    festival: ['She develops scripts at a studio in {city}.', 'She works her way up in film development in {city}.'],
+    platform: ['She develops series for streaming services in {city}.', 'In {city}, streamers start buying the projects she develops.'],
+    pandemic: ['Productions in {city} shut down; she develops projects from home.', 'In {city}, film releases move straight to streaming.'],
+    reset: ['The writers and actors strikes halt production in {city}.', 'Budgets tighten in {city}; she backs fewer, bolder projects.'],
+    ai: ['She tests AI video tools on her studio’s slate in {city}.', 'In {city}, AI tools arrive in previsualization and editing.'],
+    worldmodels: ['She produces stories set in AI generated worlds in {city}.', 'Her studio in {city} builds sets as explorable 3D worlds.'],
   },
   music: {
-    festival: ['In {city} the drop was the whole economy.', 'Every weekend in {city} was a bigger stage.'],
-    platform: ['In {city} the playlist became the radio.', 'I wrote for other voices in {city} and watched the streams climb.'],
-    pandemic: ['Every room in {city} closed, so I played to a webcam.', 'In {city} I made a record nobody could dance to yet.'],
-    reset: ['The rooms in {city} reopened and everyone came at once.', 'In {city} touring paid again, louder than ever.'],
-    ai: ['In {city} the machines learned to sing and I learned to direct them.', 'A model in {city} finished my demo better than I would have.'],
-    worldmodels: ['In {city} the show became a world you could walk into.', 'I play shows in {city} that exist in three places at once.'],
+    festival: ['She plays the festival circuit out of {city}.', 'Electronic music is booming, and {city} is full of stages.'],
+    platform: ['In {city}, streaming playlists decide which songs break.', 'She writes and produces for other artists in {city}.'],
+    pandemic: ['Clubs in {city} close; she streams sets and produces at home.', 'With live music shut down in {city}, she makes records.'],
+    reset: ['Clubs and festivals in {city} reopen to record crowds.', 'Touring pays again, and she is back on the road from {city}.'],
+    ai: ['She uses AI tools to produce and master tracks in {city}.', 'In {city}, labels start licensing music for AI training.'],
+    worldmodels: ['She performs in {city} and in virtual venues at the same time.', 'In {city}, she builds shows people can walk through in 3D.'],
   },
   platforms: {
-    festival: ['In {city} I fixed bugs for a startup no one had heard of yet.', 'I learned in {city} that software is a story told to a machine.'],
-    platform: ['As a {role} in {city} I watched a billion people scroll past my work.', 'The growth chart in {city} only went one way.'],
-    pandemic: ['The whole world logged in at once and my pager never stopped in {city}.', 'Our usage doubled in {city} while the streets emptied.'],
-    reset: ['In {city} the layoffs came by calendar invite.', 'We cut the roadmap in half in {city} and shipped the half that mattered.'],
-    ai: ['My product in {city} was rebuilt around a chat box in six weeks.', 'In {city} every roadmap started with the word model.'],
-    worldmodels: ['In {city} the interface became a place instead of a page.', 'We shipped the first app in {city} you could stand inside.'],
+    festival: ['She joins an early stage startup in {city}.', 'In {city}, she learns product by shipping every week.'],
+    platform: ['Her app in {city} grows to millions of users.', 'She runs product at a fast growing platform in {city}.'],
+    pandemic: ['Usage of her product in {city} doubles during lockdown.', 'Her team in {city} goes fully remote.'],
+    reset: ['Tech layoffs hit {city}, and her team is cut in half.', 'In {city}, growth slows and profit matters again.'],
+    ai: ['Her product in {city} is rebuilt around AI.', 'In {city}, every product roadmap now starts with AI.'],
+    worldmodels: ['She ships 3D and spatial interfaces from {city}.', 'Her team in {city} builds apps on top of world models.'],
   },
   venture: {
-    platform: ['In {city} I learned to read a cap table before a script.', 'Every coffee in {city} was a pitch.'],
-    pandemic: ['In {city} money was free and every deck was a decade early.', 'I wrote checks in {city} over video for founders I never met.'],
-    reset: ['In {city} the markdowns arrived before the spring.', 'The rate hikes hit {city} and half my portfolio went quiet.'],
-    ai: ['In {city} every deal was an AI deal.', 'As a {role} in {city} I bet on the people building the compute.'],
-    worldmodels: ['In {city} I fund the people who simulate the world.', 'My best investment in {city} was a company that builds places.'],
+    festival: ['She scouts startups for a fund in {city}.'],
+    platform: ['She scouts consumer startups for a fund in {city}.', 'In {city}, she learns how startups get funded.'],
+    pandemic: ['With rates near zero, she invests at record pace in {city}.', 'She meets founders on video calls and invests from {city}.'],
+    reset: ['Rates rise and valuations fall across her portfolio in {city}.', 'Funding dries up in {city}; she backs fewer, stronger teams.'],
+    ai: ['In {city}, almost every deal she sees is an AI deal.', 'She invests in AI infrastructure and applications from {city}.'],
+    worldmodels: ['She invests in world model and simulation startups from {city}.', 'In {city}, she backs companies building 3D worlds with AI.'],
   },
   xr: {
-    festival: ['In {city} I built levels for games that nobody played.', 'I learned to light a room that did not exist in {city}.'],
-    platform: ['In {city} I strapped a headset to strangers and watched them gasp.', 'Every investor in {city} wanted a demo, then a different demo.'],
-    pandemic: ['Our virtual stage in {city} sold out while the real ones closed.', 'In {city} I held a concert for avatars from my bedroom.'],
-    reset: ['In {city} the metaverse budgets vanished and the good builders stayed.', 'We kept building in {city} after the hype left the room.'],
-    ai: ['In {city} the world builders became world prompters.', 'The headset got lighter in {city} and the worlds got smarter.'],
-    worldmodels: ['In {city} I finally walked through a world that grew as I looked at it.', 'Everything I built in {city} for a decade turned out to be practice.'],
+    festival: ['She builds game levels and interactive art in {city}.'],
+    platform: ['She builds games in Unity and Unreal in {city}.', 'In {city}, she builds VR as headsets reach consumers.'],
+    pandemic: ['Games boom during lockdown, and her studio in {city} grows.', 'She builds virtual concerts in {city} while venues are closed.'],
+    reset: ['Metaverse budgets collapse; her team in {city} keeps shipping.', 'She focuses on real time 3D in {city} as the hype fades.'],
+    ai: ['She adds AI generated assets to her game pipeline in {city}.', 'In {city}, she builds real time 3D worlds with AI tools.'],
+    worldmodels: ['Her game engine skills carry her into world models in {city}.', 'In {city}, she builds interactive worlds generated by AI.'],
   },
   web3: {
-    platform: ['In {city} I read white papers until sunrise.', 'I learned in {city} that a ledger is also a story.'],
-    pandemic: ['In {city} I made more in a month than in a year, on paper.', 'Everyone I knew in {city} had a wallet and a theory.'],
-    reset: ['In {city} the tokens went to zero and the friends stayed.', 'Crypto winter in {city} lasted longer than the real one.'],
-    ai: ['In {city} the tokens went quiet and the GPUs got loud.', 'I rewrote my thesis in {city} and called it compute.'],
-    worldmodels: ['What was left of the wave in {city} became plumbing.', 'In {city} I own nothing on chain and everything in the model.'],
+    platform: ['She builds on a blockchain protocol in {city}.'],
+    pandemic: ['Crypto and NFTs boom, and her project in {city} raises fast.', 'In {city}, she launches an NFT project for artists.'],
+    reset: ['The crypto crash hits {city}, and most projects shut down.', 'She keeps building in {city} through the crypto winter.'],
+    ai: ['She moves from crypto to AI in {city}.'],
+    worldmodels: ['In {city}, she works on ownership of AI generated content.'],
   },
   ai: {
-    platform: ['In {city} my models ranked what everyone else saw.', 'I trained networks in {city} that nobody believed would learn to see.'],
-    pandemic: ['In {city} we modeled the spread and watched the curve.', 'The lab in {city} stayed open on video calls.'],
-    reset: ['In {city} a chatbot changed the subject of every meeting.', 'As a {role} in {city} I watched a demo become a company in a weekend.'],
-    ai: ['As a {role} in {city} I sit between the model and the world.', 'In {city} the demo became the product overnight.'],
-    worldmodels: ['In {city} the models learned physics and started building places.', 'I help the world models in {city} meet the people who need them.'],
+    platform: ['She works on recommendation systems in {city}.'],
+    pandemic: ['Her team in {city} models the pandemic with data.'],
+    reset: ['ChatGPT launches, and her work in {city} becomes urgent.'],
+    ai: ['She builds products on large language models in {city}.', 'In {city}, she takes AI products from demo to launch.'],
+    worldmodels: ['In {city}, she connects AI models to 3D and simulation.', 'She builds AI that understands physical space, in {city}.'],
   },
   worldmodels: {
-    reset: ['In {city} I trained a model to imagine the next frame of a street.', 'Simulation stopped being a game in {city} and started being a tool.'],
-    ai: ['In {city} I capture real places as splats and let models dream the rest.', 'As a {role} in {city} I build worlds that remember the people in them.'],
-    worldmodels: ['In {city} we render the planet one splat at a time.', 'As a {role} in {city} I build the places the models imagine.'],
+    reset: ['In {city}, she captures real places as 3D scans.'],
+    ai: ['She turns real places into 3D splat worlds in {city}.', 'In {city}, she builds tools for AI generated 3D worlds.'],
+    worldmodels: ['She builds simulated worlds for people and AI in {city}.', 'In {city}, she designs the places world models generate.'],
   },
   local: {
-    festival: ['I stayed in {city} and learned a trade with my hands.', 'In {city} I knew everyone and everyone knew me.'],
-    platform: ['In {city} I opened something small and posted it online.', 'My corner of {city} started showing up on maps.'],
-    pandemic: ['In {city} I kept the doors open as long as I could.', 'The neighborhood in {city} ordered through my window.'],
-    reset: ['Energy prices doubled in {city} and the whole town learned to budget.', 'In {city} the tourists came back all at once.'],
-    ai: ['In {city} a chatbot started answering my customers at night.', 'The tools found me in {city} before I went looking for them.'],
-    worldmodels: ['In {city} my work exists twice now, once in the world and once in the model.', 'I am still in {city}, and that turned out to be a choice.'],
+    festival: ['She works locally in {city} and knows everyone.'],
+    platform: ['She runs a small business in {city} and sells online.'],
+    pandemic: ['Her business in {city} makes it through the lockdowns.', 'In {city}, she moves her business to delivery and online.'],
+    reset: ['Tourists return to {city}, and costs rise with them.'],
+    ai: ['She uses AI tools to run her business in {city}.'],
+    worldmodels: ['Her business in {city} is mapped and modeled in 3D.'],
   },
 }
 
-export function narrate(industry: IndustryId, eraId: string, city: string, role: string, seed: number): string {
+// The real thread's projected years (after the lived ones), in the first person
+export const PROJECTED: Partial<Record<IndustryId, string[]>> = {
+  worldmodels: ['I build tools for AI generated 3D worlds in {city}.', 'I design simulated worlds for people and AI in {city}.'],
+  ai: ['I take AI products from demo to launch in {city}.', 'I build products on frontier AI models in {city}.'],
+  platforms: ['I ship spatial and AI products in {city}.'],
+  xr: ['I build real time 3D worlds in {city}.'],
+  music: ['I tour and release music from {city}.'],
+  film: ['I produce stories with AI tools in {city}.'],
+  venture: ['I invest in AI and world model startups from {city}.'],
+}
+
+// `n` cycles through an era's lines year by year, so a line never repeats
+// two years running. `first` is the real thread, in the first person.
+export function narrate(industry: IndustryId, eraId: string, city: string, role: string, n: number, first = false): string {
   const byEra = NARRATIVE[industry]
-  const options = byEra[eraId] ?? Object.values(byEra).find(Boolean) ?? ['I was in {city}.']
-  const line = options[Math.abs(seed) % options.length]
+  const options = (first ? PROJECTED[industry] ?? ['I work in {city}.'] : null) ?? byEra[eraId] ?? Object.values(byEra).find(Boolean) ?? ['She is in {city}.']
+  const line = options[Math.abs(n) % options.length]
   return line.replaceAll('{city}', city).replaceAll('{role}', role.toLowerCase())
 }

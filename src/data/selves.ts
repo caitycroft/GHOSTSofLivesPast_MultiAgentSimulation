@@ -2,7 +2,7 @@
 // thread is a ghost: the same person, with the same background, who stayed in
 // a place she actually lived at the moment she was there. Ghosts share the
 // real thread until their fork, then the simulation takes over.
-// Sentences are drafts, to be rewritten in Caity's voice.
+// The real thread speaks in the first person; ghosts in the third ("she").
 
 export interface Self {
   id: string
@@ -19,43 +19,43 @@ export const START_ATTRS = { craft: 3, network: 2, risk: 4, capital: 2 } // 1 to
 export const SELVES: Self[] = [
   {
     id: 'real', name: 'The one who lived it', real: true, color: '#ffb36b', neon: '#ff9a3d',
-    sentence: 'I learned that stories move industries, then I went and built the worlds they move through.',
+    sentence: 'I studied film, toured as a DJ, invested in startups, then learned to build worlds myself.',
   },
   {
-    id: 'la', name: 'The Los Angeles self', fork: { year: 2014, place: 'la', note: 'stayed in Los Angeles instead of touring' }, color: '#ff9ccf', neon: '#ff2fd0',
-    sentence: 'I stayed in Los Angeles when the tour called, and found out what that city does with a storyteller.',
+    id: 'la', name: 'The Los Angeles self', fork: { year: 2014, place: 'la', note: 'stays in Los Angeles instead of touring' }, color: '#ff9ccf', neon: '#ff2fd0',
+    sentence: 'She stays in Los Angeles in 2014 instead of touring, and builds on her studio internships.',
   },
   {
-    id: 'sto', name: 'The Stockholm self', fork: { year: 2016, place: 'sto', note: 'stayed in Stockholm' }, color: '#7cc4ff', neon: '#38f3ff',
-    sentence: 'I stayed for the long summer light and let the city decide what I would make.',
+    id: 'sto', name: 'The Stockholm self', fork: { year: 2016, place: 'sto', note: 'stays in Stockholm' }, color: '#7cc4ff', neon: '#38f3ff',
+    sentence: 'She stays in Stockholm in 2016, home to Spotify, King, Mojang and a world class pop scene.',
   },
   {
-    id: 'utah', name: 'The Utah self', fork: { year: 2021, place: 'utah', note: 'stayed in the mountains' }, color: '#9ad7ff', neon: '#3dff7a',
-    sentence: 'I stayed in the mountains and let the work come to me.',
+    id: 'utah', name: 'The Utah self', fork: { year: 2021, place: 'utah', note: 'stays in Utah' }, color: '#9ad7ff', neon: '#3dff7a',
+    sentence: 'She stays in Utah in 2021, between the Silicon Slopes tech scene and the mountains.',
   },
   {
-    id: 'hnl', name: 'The Hawaii self', fork: { year: 2021, place: 'hnl', note: 'stayed on the island' }, color: '#62d6ff', neon: '#ffd23d',
-    sentence: 'I stayed on the island and built a life around the ocean.',
+    id: 'hnl', name: 'The Hawaii self', fork: { year: 2021, place: 'hnl', note: 'stays in Hawaii' }, color: '#62d6ff', neon: '#ffd23d',
+    sentence: 'She stays in Hawaii in 2021 and builds a life around the ocean.',
   },
   {
-    id: 'lon', name: 'The London self', fork: { year: 2023, place: 'lon', note: 'stayed in London' }, color: '#5aa9ff', neon: '#b98cff',
-    sentence: 'I stayed in London and found my place between its music and its money.',
+    id: 'lon', name: 'The London self', fork: { year: 2023, place: 'lon', note: 'stays in London' }, color: '#5aa9ff', neon: '#b98cff',
+    sentence: 'She stays in London in 2023, a capital of music, media and finance.',
   },
   {
-    id: 'ber', name: 'The Berlin self', fork: { year: 2023, place: 'ber', note: 'stayed in Berlin' }, color: '#4d8cff', neon: '#ff5f5f',
-    sentence: 'I stayed in Berlin, where the club was the lab.',
+    id: 'ber', name: 'The Berlin self', fork: { year: 2023, place: 'ber', note: 'stays in Berlin' }, color: '#4d8cff', neon: '#ff5f5f',
+    sentence: 'She stays in Berlin in 2023, in the middle of its club and techno scene.',
   },
   {
-    id: 'nyc', name: 'The New York self', fork: { year: 2024, place: 'nyc', note: 'stayed in New York after the program' }, color: '#a8b8ff', neon: '#5f8bff',
-    sentence: 'I stayed in New York and built the thing everyone in the program was talking about.',
+    id: 'nyc', name: 'The New York self', fork: { year: 2024, place: 'nyc', note: 'stays in New York after the program' }, color: '#a8b8ff', neon: '#5f8bff',
+    sentence: 'She stays in New York in 2024, after NYU ITP, in the middle of the AI boom.',
   },
   {
-    id: 'osl', name: 'The Oslo self', fork: { year: 2024, place: 'osl', note: 'stayed in Oslo' }, color: '#8ec9ff', neon: '#7dfff0',
-    sentence: 'I stayed in Oslo, where the long view is a national habit.',
+    id: 'osl', name: 'The Oslo self', fork: { year: 2024, place: 'osl', note: 'stays in Oslo' }, color: '#8ec9ff', neon: '#7dfff0',
+    sentence: 'She stays in Oslo in 2024, in a small, wealthy and very online country.',
   },
   {
-    id: 'sha', name: 'The Shanghai self', fork: { year: 2024, place: 'sha', note: 'stayed in Shanghai after graduating' }, color: '#3f7fe6', neon: '#c8ff3d',
-    sentence: 'I stayed in Shanghai, where the future ships first.',
+    id: 'sha', name: 'The Shanghai self', fork: { year: 2024, place: 'sha', note: 'stays in Shanghai after graduating' }, color: '#3f7fe6', neon: '#c8ff3d',
+    sentence: 'She stays in Shanghai after graduating in 2024, in China’s biggest business city.',
   },
 ]
 
