@@ -1107,7 +1107,7 @@ export class GlobeScene {
       const camDir = dir.clone().add(new THREE.Vector3(0, 0.2, 0)).normalize()
       if (camDir.y > 0.86) camDir.setY(0.86).normalize()
       this.camGoal.copy(camDir).multiplyScalar(3.1)
-      this.lookGoal.copy(dir).multiplyScalar(0.35)
+      this.lookGoal.copy(dir).multiplyScalar(0.85) // the surface under the life, so it sits mid frame
       const kk = far ? 1 : 1 - Math.exp(-dt * 2.5)
       this.camera.position.lerp(this.camGoal, kk)
       this.look.lerp(this.lookGoal, kk)
