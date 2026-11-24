@@ -69,6 +69,8 @@ The walkthrough videos are made from the app itself, frame by frame on a virtual
 2. `npm run facts` bundles `scripts/facts.ts`, runs the same simulation on the same snapshot, and writes the outcomes the captions quote to `media/facts.json`.
 3. `scripts/cuts.mjs` is the edit list for every film and length. `npm run cut` joins the shots with transitions, burns captions into the platform safe zones, writes matching `.srt` files, `VO_SCRIPTS.md` and `INDEX.md`, and builds `media/final/teleprompter.html`, a timed voiceover prompter. Filter with `node scripts/cut.mjs --only arcade --aspect 9x16 --length 30s`.
 
+4. `npm run thumbnails` (with a build served on port 4173) makes the arcade social thumbnails in `media/thumbnails`: 16:9, a 1280x720 YouTube JPG, a 9:16 cover laid out for the 3:4 profile grid, and that 3:4 crop. Stills come from the app on the same virtual clock as the films, with labels hidden.
+
 Needs ffmpeg with libass, Playwright Chromium, and the caption fonts in `media/fonts` (Liberation Sans and Press Start 2P as .ttf).
 
 ## Stack

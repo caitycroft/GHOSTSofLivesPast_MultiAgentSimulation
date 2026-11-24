@@ -35,7 +35,7 @@ const LAYOUT = {
   // 9:16: keep clear of the top bar, the right hand icon column and the bottom caption area
   '9x16': { w: 1080, h: 1920, cap: 52, hook: 96, hookPx: 58, kick: 24, mL: 80, mR: 170, mV: 560, cx: 495, hookY: 820, endY: 880 },
 }
-const C = { white: '&H00FFFFFF', box: '&H38080402', magenta: '&H00D02FFF', cyan: '&H00FFF338', green: '&H007AFF3D', amber: '&H006BB3FF', grey: '&H00C8C8C8', clear: '&HFF000000' }
+const C = { white: '&H00FFFFFF', box: '&H38080402', magenta: '&H00D02FFF', cyan: '&H00FFF338', green: '&H007AFF3D', amber: '&H006BB3FF', grey: '&H00C8C8C8', graphite: '&H003B332E', clear: '&HFF000000' }
 
 function header(look, L) {
   const f = (name, font, size, primary, outline, back, bold, border, ol, sh, align, mL, mR, mV, spacing = 0) =>
@@ -46,7 +46,8 @@ function header(look, L) {
         f('Cap', 'Liberation Sans', L.cap, C.white, C.magenta, '&H00000000', true, 1, 2.2, 0, 2, L.mL, L.mR, L.mV),
         f('Hook', 'Press Start 2P', L.hookPx, C.white, C.magenta, '&H00000000', false, 1, 4, 0, 5, 0, 0, 0, 2),
         f('Title', 'Press Start 2P', L.hookPx + 4, C.white, C.magenta, '&H00000000', false, 1, 4, 0, 5, 0, 0, 0, 4),
-        f('Sub', 'Liberation Sans', L.kick + 6, C.cyan, '&H00000000', '&H00000000', true, 1, L.h > L.w ? 2.5 : 0, 0, 5, 0, 0, 0, 3),
+        // graphite, not black: a soft 2px edge that lifts the cyan off the grid without a marker outline
+        f('Sub', 'Liberation Sans', L.kick + 6, C.cyan, C.graphite, '&H00000000', true, 1, L.h > L.w ? 2.25 : 2, 0, 5, 0, 0, 0, 3),
       ]
     : [
         f('Box', 'Liberation Sans', L.cap, C.clear, C.box, C.box, true, 3, 18, 0, 2, L.mL, L.mR, L.mV),
@@ -171,7 +172,7 @@ for (const [look, Look] of LOOKS) {
         const title = tall ? 'GHOSTS OF\\NLIVES PAST' : 'GHOSTS OF LIVES PAST'
         const sub = tall ? 'The Unlived Lives\\Na multi agent simulation' : 'The Unlived Lives \\h\\h·\\h\\h a multi agent simulation'
         ass += `Dialogue: 1,${ts(tl.end.t0)},${ts(tl.end.t1)},Title,,0,0,0,,{\\pos(${L.cx},${L.endY})\\fad(500,0)${fx}}${title}\n`
-        ass += `Dialogue: 1,${ts(tl.end.t0 + 0.4)},${ts(tl.end.t1)},Sub,,0,0,0,,{\\pos(${L.cx},${L.endY + (tall ? 190 : 90)})\\fad(500,0)}${sub}\n`
+        ass += `Dialogue: 1,${ts(tl.end.t0 + 0.4)},${ts(tl.end.t1)},Sub,,0,0,0,,{\\pos(${L.cx},${L.endY + (tall ? 190 : 90)})\\fad(500,0)${look === 'arcade' ? '\\blur0.6' : ''}}${sub}\n`
       }
       writeFileSync(`media/final/${base}.ass`, ass)
       writeFileSync(`media/final/${base}.srt`, srt)
