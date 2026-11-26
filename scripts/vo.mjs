@@ -73,9 +73,15 @@ for (const l of dst.lines) {
 }
 if (pickups) {
   const names = pickupLines.split('|').map((s) => s.trim()).filter(Boolean)
-  const sp = speech(pickups, 1.0) // pickups are read with about two seconds between lines
-  if (sp.length !== names.length) console.warn(`pickups: heard ${sp.length} phrases, expected ${names.length}`)
-  names.forEach((text, i) => sp[i] && have.set(text, { text, file: pickups, a: Math.max(0, sp[i][0] - 0.06), b: sp[i][1] + 0.12, lag: 0.35 }))
+  // a pickup line can have pauses of its own ("Same me. Different city."), so
+  // the take is split into as many lines as were read, at its biggest gaps
+  const sp = speech(pickups, 0.25)
+  const gaps = sp.slice(1).map(([a], i) => ({ i, gap: a - sp[i][1] })).sort((x, y) => y.gap - x.gap).slice(0, names.length - 1).map((g) => g.i).sort((x, y) => x - y)
+  const groups = []
+  let from = 0
+  for (const g of [...gaps, sp.length - 1]) { groups.push([sp[from][0], sp[g][1]]); from = g + 1 }
+  if (groups.length !== names.length) console.warn(`pickups: found ${groups.length} lines, expected ${names.length}`)
+  names.forEach((text, i) => groups[i] && have.set(text, { text, file: pickups, a: Math.max(0, groups[i][0] - 0.06), b: groups[i][1] + 0.12, lag: 0.2 }))
 }
 
 // place each line at its caption plus the read's own lag (0.15 to 0.6s); if
@@ -98,11 +104,15 @@ dst.lines.forEach((l, i) => {
 if (!ok) console.log('  some lines are missing or run long; nothing written for them to overlap')
 if (dry || !plan.length) process.exit(ok ? 0 : 1)
 
-// assemble: each line trimmed, faded at its edges, delayed to its place, mixed, then -14 LUFS
+// assemble: each line trimmed, matched in level to the other takes, faded at
+// its edges, delayed to its place, mixed, then the whole track to -14 LUFS
 mkdirSync('media/final_vo', { recursive: true })
 const files = [...new Set(plan.map((p) => p.file))]
+const lufs = (f) => Number(/I:\s+(-?[\d.]+) LUFS/.exec(spawnSync('ffmpeg', ['-hide_banner', '-i', f, '-af', 'ebur128=framelog=quiet', '-f', 'null', '-']).stderr.toString())?.[1] ?? -18)
+const gain = Object.fromEntries(files.map((f) => [f, -18 - lufs(f)]))
+for (const f of files) console.log(`  level ${gain[f] >= 0 ? '+' : ''}${gain[f].toFixed(1)} dB  ${f.split('/').pop()}`)
 const inputs = files.flatMap((f) => ['-i', f])
-const parts = plan.map((p, i) => `[${files.indexOf(p.file)}:a]atrim=${p.a.toFixed(3)}:${p.b.toFixed(3)},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,afade=t=in:d=0.015,afade=t=out:st=${(p.b - p.a - 0.04).toFixed(3)}:d=0.04,adelay=${Math.round(p.at * 1000)}:all=1[l${i}]`)
+const parts = plan.map((p, i) => `[${files.indexOf(p.file)}:a]atrim=${p.a.toFixed(3)}:${p.b.toFixed(3)},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,volume=${gain[p.file].toFixed(2)}dB,afade=t=in:d=0.015,afade=t=out:st=${(p.b - p.a - 0.04).toFixed(3)}:d=0.04,adelay=${Math.round(p.at * 1000)}:all=1[l${i}]`)
 const mix = `${plan.map((_, i) => `[l${i}]`).join('')}amix=inputs=${plan.length}:normalize=0:dropout_transition=0,apad=whole_dur=${dst.seconds.toFixed(3)},atrim=0:${dst.seconds.toFixed(3)},loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[vo]`
 for (const name of dst.files) {
   const base = name.replace(/\.mp4$/, '')
