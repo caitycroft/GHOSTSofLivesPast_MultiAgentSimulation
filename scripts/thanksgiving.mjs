@@ -19,9 +19,9 @@ const OPENINGS = {
 // [line, pause after it in seconds]
 const BODY = [
   ['I’ve lived in ten cities, in six countries. Every time I left one, I wondered about the me who stayed, and the life she’d keep building there.', 0.8],
-  ['So I built a multi agent simulation. Each agent is me, staying in one of those cities, building a life on real economic and industry data.', 0.6],
+  ['So I built a multi agent simulation. Each agent is me, staying in one of those cities and building a life shaped by its economy and industries at the time.', 0.6],
   ['It’s my most honest answer to where each life would be today.', 0.9],
-  ['In Stockholm, she builds games. In Berlin, she runs her own techno label. In Hawaii, she’s building ocean and climate ventures.', 0.9],
+  ['In Stockholm, she works as a game developer. In Berlin, she runs her own techno label. In Hawaii, she’s building ocean and climate ventures.', 0.9],
   ['And here I am.', 1.6],
   ['Today is Thanksgiving in the US. Wherever you are, it’s a good day to look back.', 0.8],
   ['Looking at all of them, I don’t feel regret. I feel grateful.', 0.9],
