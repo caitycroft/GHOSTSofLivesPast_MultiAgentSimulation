@@ -1,13 +1,25 @@
 // Builds the voiceover teleprompter page from media/final/scripts.json, so
 // the lines it times are exactly the captions burned into each video.
 //   node scripts/teleprompter.mjs  ->  media/final/teleprompter.html
+// Any other timed script works too (scripts/thanksgiving.mjs uses this):
+//   node scripts/teleprompter.mjs --scripts a.json --out b.html --title "..." --heading "..." --intro "..."
 
 import { readFileSync, writeFileSync } from 'node:fs'
 
-const scripts = JSON.parse(readFileSync('media/final/scripts.json', 'utf8'))
+const arg = (name, fallback) => {
+  const i = process.argv.indexOf(`--${name}`)
+  return i > -1 ? process.argv[i + 1] : fallback
+}
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+const OUT = arg('out', 'media/final/teleprompter.html')
+const TITLE = esc(arg('title', 'Lives Past Teleprompter'))
+const HEADING = esc(arg('heading', 'Ghosts of Lives Past, voiceover'))
+const INTRO = esc(arg('intro', 'Pick a video, press Start, and read the highlighted line. Lines appear exactly when the matching caption appears in the video, so your read lands in sync.'))
+const HINT = esc(arg('hint', 'Space starts and pauses, R resets. A beep counts you in; the video starts on the high beep. The bar under each line shows how much time it has left.'))
+const scripts = JSON.parse(readFileSync(arg('scripts', 'media/final/scripts.json'), 'utf8'))
 const data = JSON.stringify(scripts).replace(/</g, '\\u003c')
 
-const html = `<title>Lives Past Teleprompter</title>
+const html = `<title>${TITLE}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,8 +80,8 @@ const html = `<title>Lives Past Teleprompter</title>
 
 <main class="wrap">
   <header>
-    <h1>Ghosts of Lives Past, voiceover</h1>
-    <p>Pick a video, press Start, and read the highlighted line. Lines appear exactly when the matching caption appears in the video, so your read lands in sync.</p>
+    <h1>${HEADING}</h1>
+    <p>${INTRO}</p>
   </header>
 
   <nav class="picker" id="picker" aria-label="Choose a video script"></nav>
@@ -85,7 +97,7 @@ const html = `<title>Lives Past Teleprompter</title>
       <button class="primary" id="go" type="button">Start</button>
       <button id="reset" type="button">Reset</button>
     </div>
-    <div class="hint">Space starts and pauses, R resets. A beep counts you in; the video starts on the high beep. The bar under each line shows how much time it has left.</div>
+    <div class="hint">${HINT}</div>
   </section>
 
   <section class="script" id="script"></section>
@@ -195,5 +207,5 @@ const html = `<title>Lives Past Teleprompter</title>
   renderPicker(); renderScript(); show();
 </script>
 `
-writeFileSync('media/final/teleprompter.html', html)
-console.log('wrote media/final/teleprompter.html')
+writeFileSync(OUT, html)
+console.log(`wrote ${OUT}`)
