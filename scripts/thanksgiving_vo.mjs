@@ -6,6 +6,9 @@
 //
 //   python3 scripts/align.py take.m4a "Opening A" media/thanksgiving/take_A_lines.json
 //   node scripts/thanksgiving_vo.mjs --take take.m4a --lines media/thanksgiving/take_A_lines.json --out media/thanksgiving/vo_A
+//
+// A line can name its own recording ("file"), so an alternate opening recorded
+// on its own is joined to the body of the main take.
 
 import { execFileSync, spawnSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -15,7 +18,7 @@ const arg = (name, fallback) => {
   return i > -1 ? process.argv[i + 1] : fallback
 }
 const take = arg('take')
-const lines = JSON.parse(readFileSync(arg('lines'), 'utf8'))
+const lines = JSON.parse(readFileSync(arg('lines'), 'utf8')).map((l) => ({ ...l, file: l.file ?? take }))
 const out = arg('out', 'media/thanksgiving/vo')
 
 // the pause after each line, in seconds; the beats that carry the piece breathe longer
@@ -31,19 +34,26 @@ const PAD_IN = 0.12, PAD_OUT = 0.3
 
 let t = 0.6 // a beat of silence before the first word
 const placed = lines.map((l, i) => {
-  const a = Math.max(0, l.start - PAD_IN, i > 0 ? lines[i - 1].end + 0.05 : 0)
-  const b = Math.min(l.end + PAD_OUT, i < lines.length - 1 ? lines[i + 1].start - 0.05 : Infinity)
-  const p = { text: l.text, a, b, at: t, voiceStart: +(t + (l.start - a)).toFixed(2), voiceEnd: +(t + (l.end - a)).toFixed(2) }
+  const sameBefore = i > 0 && lines[i - 1].file === l.file, sameAfter = i < lines.length - 1 && lines[i + 1].file === l.file
+  const a = Math.max(0, l.start - PAD_IN, sameBefore ? lines[i - 1].end + 0.05 : 0)
+  const b = Math.min(l.end + PAD_OUT, sameAfter ? lines[i + 1].start - 0.05 : Infinity)
+  const p = { text: l.text, file: l.file, a, b, at: t, voiceStart: +(t + (l.start - a)).toFixed(2), voiceEnd: +(t + (l.end - a)).toFixed(2) }
   t = t + (b - a) + Math.max(0, pauseAfter(l.text, i) - PAD_OUT)
   return p
 })
 const total = +t.toFixed(2)
 
-const lufs = Number(/I:\s+(-?[\d.]+) LUFS/.exec(spawnSync('ffmpeg', ['-hide_banner', '-i', take, '-af', 'ebur128=framelog=quiet', '-f', 'null', '-']).stderr.toString())?.[1] ?? -18)
-const gain = -18 - lufs
-const parts = placed.map((p, i) => `[0:a]atrim=${p.a.toFixed(3)}:${p.b.toFixed(3)},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,volume=${gain.toFixed(2)}dB,highpass=f=70,afade=t=in:d=0.02,afade=t=out:st=${(p.b - p.a - 0.06).toFixed(3)}:d=0.06,adelay=${Math.round(p.at * 1000)}:all=1[l${i}]`)
-const mix = `${placed.map((_, i) => `[l${i}]`).join('')}amix=inputs=${placed.length}:normalize=0:dropout_transition=0,apad=whole_dur=${total},atrim=0:${total},loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[vo]`
-execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', take, '-filter_complex', [...parts, mix].join(';'), '-map', '[vo]', '-c:a', 'pcm_s16le', `${out}.wav`])
+// each recording is matched in level before the mix, so an opening recorded
+// separately sits at the same volume as the body
+const files = [...new Set(placed.map((p) => p.file))]
+const lufsOf = (f) => Number(/I:\s+(-?[\d.]+) LUFS/.exec(spawnSync('ffmpeg', ['-hide_banner', '-i', f, '-af', 'ebur128=framelog=quiet', '-f', 'null', '-']).stderr.toString())?.[1] ?? -18)
+const gainOf = Object.fromEntries(files.map((f) => [f, -18 - lufsOf(f)]))
+const lufs = lufsOf(take)
+const parts = placed.map((p, i) => `[${files.indexOf(p.file)}:a]atrim=${p.a.toFixed(3)}:${p.b.toFixed(3)},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,volume=${gainOf[p.file].toFixed(2)}dB,highpass=f=70,afade=t=in:d=0.02,afade=t=out:st=${(p.b - p.a - 0.06).toFixed(3)}:d=0.06,adelay=${Math.round(p.at * 1000)}:all=1[l${i}]`)
+// timestamps are restamped from zero after the mix: padding and trimming read
+// them, and they would otherwise start at the first line's delay
+const mix = `${placed.map((_, i) => `[l${i}]`).join('')}amix=inputs=${placed.length}:normalize=0:dropout_transition=0,asetpts=N/SR/TB,apad=whole_dur=${total},atrim=0:${total},loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[vo]`
+execFileSync('ffmpeg', ['-v', 'error', '-y', ...files.flatMap((f) => ['-i', f]), '-filter_complex', [...parts, mix].join(';'), '-map', '[vo]', '-c:a', 'pcm_s16le', `${out}.wav`])
 // captions: each line shows from just before its first word until just before the next line
 const captions = placed.map((p, i) => ({ text: p.text, t0: +Math.max(0, p.voiceStart - 0.15).toFixed(2), t1: +(i < placed.length - 1 ? placed[i + 1].voiceStart - 0.27 : p.voiceEnd + 1.2).toFixed(2), voiceStart: p.voiceStart, voiceEnd: p.voiceEnd }))
 writeFileSync(`${out}.json`, JSON.stringify({ seconds: total, levelledFrom: lufs, captions }, null, 1))

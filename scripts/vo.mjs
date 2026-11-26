@@ -132,7 +132,9 @@ const gain = Object.fromEntries(files.map((f) => [f, -18 - lufs(f)]))
 for (const f of files) console.log(`  level ${gain[f] >= 0 ? '+' : ''}${gain[f].toFixed(1)} dB  ${f.split('/').pop()}`)
 const inputs = files.flatMap((f) => ['-i', f])
 const parts = plan.map((p, i) => `[${files.indexOf(p.file)}:a]atrim=${p.a.toFixed(3)}:${p.b.toFixed(3)},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,volume=${gain[p.file].toFixed(2)}dB,afade=t=in:d=0.015,afade=t=out:st=${(p.b - p.a - 0.04).toFixed(3)}:d=0.04,adelay=${Math.round(p.at * 1000)}:all=1[l${i}]`)
-const mix = `${plan.map((_, i) => `[l${i}]`).join('')}amix=inputs=${plan.length}:normalize=0:dropout_transition=0,apad=whole_dur=${dst.seconds.toFixed(3)},atrim=0:${dst.seconds.toFixed(3)},loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[vo]`
+// timestamps are restamped from zero after the mix: padding and trimming read
+// them, and they would otherwise start at the first line's delay
+const mix = `${plan.map((_, i) => `[l${i}]`).join('')}amix=inputs=${plan.length}:normalize=0:dropout_transition=0,asetpts=N/SR/TB,apad=whole_dur=${dst.seconds.toFixed(3)},atrim=0:${dst.seconds.toFixed(3)},loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[vo]`
 for (const name of dst.files) {
   const base = name.replace(/\.mp4$/, '')
   const wav = `media/final_vo/${base}_VO.wav`
