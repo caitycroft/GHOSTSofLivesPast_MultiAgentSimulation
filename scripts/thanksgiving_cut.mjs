@@ -311,7 +311,8 @@ function writeCaptions(assFile, srtFile) {
     style('Cap', LAY.cap, C.white, '&H00000000', '&H00000000', true, 1, 0, 0, 2, LAY.mL, LAY.mR, LAY.mV),
     style('Hook', LAY.hook, C.white, '&H40000000', '&H80000000', true, 1, 2, 3, 5, 0, 0, 0, 1),
     style('Title', 86, C.white, '&H40000000', '&H80000000', true, 1, 1, 2, 5, 0, 0, 0, 14),
-    style('Sub', 34, C.amber, '&H00000000', '&H00000000', false, 1, 0, 0, 5, 0, 0, 0, 6),
+    // the handle sits over bright sky too, so it carries a dark outline and shadow
+    style('Sub', 36, C.amber, '&H50000000', '&H70000000', true, 1, 2, 2, 5, 0, 0, 0, 6),
   ].join('\n')
   ass += '\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n'
   let srt = '', n = 0
