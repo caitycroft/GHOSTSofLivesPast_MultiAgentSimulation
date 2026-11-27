@@ -338,6 +338,15 @@ function writeCaptions(assFile, srtFile) {
 }
 
 // ------------------------------------------------------------------ final
+// measure a finished file and bring it to -14 LUFS (social platforms' target), leaving the picture untouched
+export function level(file, target = -14) {
+  const lufs = Number(/I:\s+(-?[\d.]+) LUFS/.exec(execFileSync('sh', ['-c', `ffmpeg -hide_banner -i "${file}" -af ebur128=framelog=quiet -f null - 2>&1 || true`]).toString())?.[1])
+  if (!Number.isFinite(lufs) || Math.abs(lufs - target) < 0.4) return
+  const tmp = file.replace(/\.mp4$/, '_lvl.mp4')
+  execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', file, '-c:v', 'copy', '-af', `volume=${(target - lufs).toFixed(2)}dB,alimiter=limit=0.89`, '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', tmp])
+  execFileSync('mv', [tmp, file])
+  console.log(`  level ${lufs} -> ${target} LUFS: ${file.split('/').pop()}`)
+}
 async function main() {
   console.log(`Thanksgiving ${V}: ${beats.length} beats, ${TOTAL}s`)
   await renderCards()
@@ -374,15 +383,17 @@ async function main() {
     const lift = (END_T0 - 0.6).toFixed(2)
     parts.push(`[${voIn + 1}:a]atrim=start=${start.toFixed(3)},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,equalizer=f=2500:t=q:w=1.2:g=-3,volume='pow(10,(-17+6*clip((t-${lift})/1.0,0,1))/20)':eval=frame,afade=t=in:d=0.8,afade=t=out:st=${(TOTAL - 2.2).toFixed(2)}:d=2.2,atrim=0:${TOTAL}[bed]`)
     parts.push(`[bed][key]sidechaincompress=threshold=0.04:ratio=3:attack=15:release=350[duck]`)
-    parts.push(`[vo][duck]amix=inputs=2:normalize=0,volume=1.8dB,alimiter=limit=0.89[aout]`) // about -14 LUFS overall
+    parts.push(`[vo][duck]amix=inputs=2:normalize=0,alimiter=limit=0.89[aout]`)
   } else parts.push(`[${voIn}:a]aformat=sample_rates=48000:channel_layouts=stereo,apad=whole_dur=${TOTAL}[aout]`)
   execFileSync('ffmpeg', ['-v', 'error', '-y', ...inputs, '-filter_complex', parts.join(';'), '-map', '[vout]', '-map', '[aout]', '-t', String(TOTAL),
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p', '-r', String(FPS), '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', `${OUT}/${name}.mp4`], { stdio: 'inherit' })
   console.log(`wrote media/thanksgiving/cuts/${name}.mp4`)
+  level(`${OUT}/${name}.mp4`)
   if (music) {
     // the same picture with the voice alone, in case a platform mutes the song
     execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', `${OUT}/${name}.mp4`, '-i', `${ROOT}/media/thanksgiving/vo_${V}.wav`, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-af', `apad=whole_dur=${TOTAL}`, '-c:a', 'aac', '-b:a', '192k', '-t', String(TOTAL), '-movflags', '+faststart', `${OUT}/${name}_voice-only.mp4`])
     console.log(`wrote media/thanksgiving/cuts/${name}_voice-only.mp4`)
+    level(`${OUT}/${name}_voice-only.mp4`)
   }
 }
 main().catch((e) => { console.error(e); process.exit(1) })
