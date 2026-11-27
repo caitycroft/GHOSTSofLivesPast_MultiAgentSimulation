@@ -333,11 +333,11 @@ async function gfxPage() {
     @font-face { font-family: Arial; src: url('file://${ROOT}/media/fonts/LiberationSans-Bold.ttf'); font-weight: 700; }
     @font-face { font-family: Arial; src: url('file://${ROOT}/media/fonts/LiberationSans-Regular.ttf'); font-weight: 400; }`
   const imgs = photosUsed().map((p) => `<img data-id="${p}" src="file://${FOOT}/${p}.jpg">`).join('')
-  writeFileSync(`${WORK}/gfx.html`, `<!doctype html><meta charset=utf-8><style>${fonts} html,body{margin:0;background:transparent;overflow:hidden} img{display:none} canvas{display:block}</style>
+  writeFileSync(`${WORK}/gfx_${V}_${ASPECT}.html`, `<!doctype html><meta charset=utf-8><style>${fonts} html,body{margin:0;background:transparent;overflow:hidden} img{display:none} canvas{display:block}</style>
 <canvas id=c></canvas>${imgs}<script>window.D = ${JSON.stringify(data)}</script>`)
   const browser = await chromium.launch()
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 })
-  await page.goto(`file://${WORK}/gfx.html`, { waitUntil: 'load' })
+  await page.goto(`file://${WORK}/gfx_${V}_${ASPECT}.html`, { waitUntil: 'load' })
   await page.evaluate(() => Promise.all([document.fonts.load('700 20px Arial'), document.fonts.load('400 20px Arial'), document.fonts.load('15px "JetBrains Mono"'), document.fonts.load('600 15px "JetBrains Mono"'), ...[...document.images].map((i) => i.decode())]))
   if (await page.evaluate(() => [...document.images].some((i) => !i.naturalWidth))) throw new Error('a photo did not load')
   await page.addScriptTag({ path: `${ROOT}/scripts/thanksgiving_gfx.js` })
