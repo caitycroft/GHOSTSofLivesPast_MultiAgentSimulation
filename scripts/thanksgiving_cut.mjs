@@ -29,14 +29,14 @@ const arg = (name, fallback) => {
 const V = arg('version', 'A')
 const music = arg('music')
 const musicAt = Number(arg('music-at', NaN))
-const ROOT = resolve('.')
-const FOOT = `${ROOT}/media/thanksgiving/footage`
-const WORK = `${ROOT}/media/thanksgiving/.work`
+export const ROOT = resolve('.')
+export const FOOT = `${ROOT}/media/thanksgiving/footage`
+export const WORK = `${ROOT}/media/thanksgiving/.work`
 const OUT = `${ROOT}/media/thanksgiving/cuts`
-const FPS = 30
-const ASPECT = arg('aspect', '9x16')
-const VERT = ASPECT !== '16x9'
-const [W, H] = VERT ? [1080, 1920] : [1920, 1080]
+export const FPS = 30
+export const ASPECT = arg('aspect', '9x16')
+export const VERT = ASPECT !== '16x9'
+export const [W, H] = VERT ? [1080, 1920] : [1920, 1080]
 mkdirSync(WORK, { recursive: true })
 mkdirSync(OUT, { recursive: true })
 
@@ -61,7 +61,7 @@ const fr = (t) => Math.round(t * FPS)
 // Vertical: the globe up top and left of the app icons, photos under it, captions
 // in the band above the platform's own text. Horizontal: the globe on the left,
 // photos to its right, captions in the lower third.
-const L = VERT
+export const L = VERT
   ? {
       vertical: true, globe: { x: 495, y: 590, r: 300 }, photo: { x: 80, y: 945, w: 480, h: 345 }, labelMaxX: 905,
       readout: [40, 150], tick: [22, 330, 1150], vp: [540, 860],
@@ -113,7 +113,7 @@ const AGENT_PHOTO = {
   hnl: ['hawaii_xr_quest_headset_glasses', 0.5, 0.3], lon: ['london_alphatheta_mic_still', 0.5, 0.3], ber: ['berlin_node_talk_smile', 0.45, 0.3], nyc: ['nyc_studio_smile_headphones', 0.5, 0.3],
   osl: ['oslo_pride_dj_closeup', 0.5, 0.3], sha: ['shanghai_ima_lowres_thesis_smile', 0.55, 0.3],
 }
-const agents = AGENTS.agents.map((a) => {
+export const agents = AGENTS.agents.map((a) => {
   const home = places[a.real ? 'sf' : a.id]
   return {
     id: a.id, name: a.name, neon: a.neon, real: a.real, fork: a.fork, ends: a.ends, home: { lat: home.lat, lon: home.lon },
@@ -153,12 +153,14 @@ cities.forEach(([photo, g, plate], i) => {
 sc(tStayed, 'forks', { ticker: true, glitch: true })
 pl(tStayed, 'a_street_forks', 5.4, ['c_globe_tour_plate', 0], 0.3)
 
-// "So I built a multi agent simulation." the story wall, then the simulation itself in rapid cuts under the causal tree
+// "So I built a multi agent simulation." the story wall she made, held long enough to read (it comes in during the
+// breath before the line), then the simulation itself in rapid cuts under the causal tree from "simulation"
 const simRe = /^So I built/
-const tSim = cut(line(simRe).voiceStart), tMulti = cut(word(simRe, 'multi')), tEach = cut(word(simRe, 'each'))
-sc(tSim, 'place', { photo: 'nyc_story_wall_full', geo: 'nyc', globe: big, pan: true, year: 2023 })
-pl(tSim, 'c_loom', 0.5, ['a_timeline', 0.5], 0.4)
-sc(tMulti, 'simtree', { glitch: true })
+const tSim = cut(line(simRe).voiceStart), tEach = cut(word(simRe, 'each'))
+const tWall = Math.max(line(tenRe).voiceEnd + 0.35, tSim - 0.6), tMulti = cut(word(simRe, 'simulation'))
+sc(tWall, 'place', { photo: 'nyc_story_wall_full', geo: 'nyc', globe: big, pan: true, year: 2023 })
+pl(tWall, 'c_loom', 0.5, ['a_timeline', 0.5], 0.4)
+sc(tMulti, 'simtree', { glitch: true, quick: true })
 // (the split doorway is mostly empty when tall, so the vertical cut uses the data and the streets instead)
 const rapid = [['c_loom', 3], ['a_loom', 1], ['a_timeline', 4], VERT ? ['c_data', 2] : ['c_split', 1], ['a_dash', 2], ['a_how', 3], ['c_globe_tour', 2.5], VERT ? ['a_city_nyc', 1] : ['a_split', 2], ['a_lives', 3], ['c_data', 4]]
 rapid.forEach(([s, inn], i) => pl(tMulti + (i * (tEach - tMulti)) / rapid.length, s, inn))
@@ -189,7 +191,7 @@ for (const h of honest) {
 const tBer = cut(word(ghRe, 'in', 1)), tHnl = cut(word(ghRe, 'in', 2))
 sc(tSto, 'place', { photo: 'stockholm_boat_sunset', geo: 'sto', globe: big, look: 'arcade', ghost: 'sto' })
 pl(tSto, 'a_dio_sto_plate', 1, ['a_street_forks', 7], 0.35)
-sc(tBer, 'place', { photo: 'berlin_studio_projector_setup', geo: 'ber', globe: big, look: 'arcade', ghost: 'ber' })
+sc(tBer, 'place', { photo: 'ibiza_amnesia_vj_performing', geo: 'ber', globe: big, look: 'arcade', ghost: 'ber', fx: 0.6 })
 pl(tBer, 'a_street_forks', 2, ['a_hook', 5], 0.35)
 sc(tHnl, 'place', { photo: 'hawaii_eternal_game_jeep_hud_still', geo: 'hnl', globe: big, look: 'arcade', ghost: 'hnl', fx: 0.45 })
 pl(tHnl, 'a_dio_ghost_plate', 0, ['a_outro', 3], 0.35)
@@ -235,7 +237,7 @@ pl(cut(word(bkRe, 'but')), null)
 // "Happy Thanksgiving, from all of me." every self's hovercraft comes in, and their trails draw a heart around her on the High Coast
 const hpRe = /^Happy Thanksgiving/
 const tHappy = cut(line(hpRe).voiceStart)
-const heartPos = VERT ? [0.55, 0.5] : [0.5, 0.5]
+export const heartPos = VERT ? [0.55, 0.5] : [0.5, 0.5]
 sc(tHappy, 'heart', { photo: 'highcoast_rock_dusk_all_yours', pos: heartPos, still: true, cover: true })
 pl(tHappy, null)
 
@@ -258,7 +260,7 @@ for (const list of [scenes, plates]) {
 }
 
 // ------------------------------------------------------------------ background
-const GRADE = {
+export const GRADE = {
   vivid: 'eq=contrast=1.07:saturation=1.5',
   dim: 'eq=brightness=-0.07:saturation=1.35',
   dark: 'eq=brightness=-0.12:saturation=1.3,gblur=sigma=2',
@@ -290,7 +292,7 @@ function renderBackground(file) {
 }
 
 // ------------------------------------------------------------------ graphics
-function gfxData() {
+export function gfxData() {
   const { feature } = require('topojson-client')
   const topo = JSON.parse(readFileSync(`${ROOT}/node_modules/world-atlas/land-110m.json`, 'utf8'))
   const land = feature(topo, topo.objects.land)
@@ -349,7 +351,10 @@ async function renderGfx(file) {
   const ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'png', '-i', '-', '-c:v', 'png', '-pix_fmt', 'rgba', file], { stdio: ['pipe', 'inherit', 'inherit'] })
   for (let f = 0; f < data.total; f++) {
     await page.evaluate((f) => window.draw(f), f)
-    const png = await page.screenshot({ type: 'png', omitBackground: true })
+    let png
+    for (let tries = 0; !png; tries++) {
+      try { png = await page.screenshot({ type: 'png', omitBackground: true }) } catch (e) { if (tries >= 3) throw e; await new Promise((r) => setTimeout(r, 1500)) }
+    }
     if (!ff.stdin.write(png)) await new Promise((r) => ff.stdin.once('drain', r))
     if (f % 300 === 0) console.log(`  graphics ${f}/${data.total}`)
   }
@@ -493,6 +498,8 @@ async function main() {
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-r', String(FPS), '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', `${OUT}/${name}.mp4`], { stdio: 'inherit' })
   console.log(`wrote media/thanksgiving/cuts/${name}.mp4`)
   level(`${OUT}/${name}.mp4`)
+  // the graphics layer is about 2.5 GB of PNG frames; it goes once the film is made, unless kept for a quick re-finish
+  if (!process.argv.includes('--keep-work')) execFileSync('rm', ['-f', gfx])
   if (music) {
     // the same picture with the voice alone, in case a platform mutes the song
     execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', `${OUT}/${name}.mp4`, '-i', `${ROOT}/media/thanksgiving/vo_${V}.wav`, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-af', `apad=whole_dur=${TOTAL}`, '-c:a', 'aac', '-b:a', '192k', '-t', String(TOTAL), '-movflags', '+faststart', `${OUT}/${name}_voice-only.mp4`])
@@ -500,4 +507,5 @@ async function main() {
     level(`${OUT}/${name}_voice-only.mp4`)
   }
 }
-main().catch((e) => { console.error(e); process.exit(1) })
+// run as a script (the thumbnails import this file for its layout and data)
+if (process.argv[1]?.endsWith('thanksgiving_cut.mjs')) main().catch((e) => { console.error(e); process.exit(1) })

@@ -323,7 +323,7 @@
       if (s <= 0) continue
       const a = 0.65 + 0.35 * stay
       glowLine(head(b.pts, s), b.a.neon, 4 + 2 * stay, a, [1, 12])
-      if (s > 0.98) {
+      if (s > 0.98 && !sc.faces) {
         const [tx, ty] = b.tip
         dotGlow(tx, ty, 6 + 3 * stay, b.a.neon, a)
         const up = T.vertical ? -22 : (ty < T.cy ? -20 : 38)
@@ -352,9 +352,24 @@
     if (grow > la.uf + 0.05) { const [px, py] = treeMap(T, la.uf + 0.05, trunkV(la.uf + 0.05)); text('GO', px + (T.vertical ? 22 : 0), py + (T.vertical ? -8 : -20), `700 22px ${SANS}`, REAL, T.vertical ? 'left' : 'center', 'middle', 10) }
     if (grow > 0.995) {
       const n = geo.now
-      text('NOW', n[0] + (T.vertical ? 22 : 0), n[1] + (T.vertical ? 8 : -22), `700 26px ${SANS}`, WHITE, T.vertical ? 'left' : 'center', 'alphabetic', 10)
+      if (!sc.faces) text('NOW', n[0] + (T.vertical ? 22 : 0), n[1] + (T.vertical ? 8 : -22), `700 26px ${SANS}`, WHITE, T.vertical ? 'left' : 'center', 'alphabetic', 10)
       const fp = clamp((f - m.grow[1]) / 20)
       for (const p of geo.future) glowLine(head(p, fp), WHITE, 2.5, 0.35 + 0.15 * Math.sin(t * 3), [1, 10])
+    }
+    // her face at the end of every road: the nine who stayed, and her now at the tip of the one she took
+    if (sc.faces) {
+      const r = sc.faces
+      const face = (x, y, a, label, col) => {
+        g.save()
+        g.shadowColor = rgba(col, 0.95); g.shadowBlur = 26
+        g.beginPath(); g.arc(x, y, r, 0, TAU); g.fillStyle = '#000'; g.fill()
+        g.shadowBlur = 0; g.clip(); cover(IMG[a.photo], x - r, y - r, r * 2, r * 2, a.fx ?? 0.5, a.fy ?? 0.35)
+        g.restore()
+        g.strokeStyle = rgba(col, 1); g.lineWidth = 4; g.beginPath(); g.arc(x, y, r, 0, TAU); g.stroke()
+        text(label, x, y + r + 26, `700 ${Math.round(r * 0.36)}px ${SANS}`, col, 'center', 'alphabetic', 10)
+      }
+      for (const b of geo.branches) face(b.tip[0], b.tip[1], b.a, b.a.fork.city.toUpperCase(), b.a.neon)
+      face(geo.now[0], geo.now[1], AG.real, 'ME, NOW', REAL)
     }
     const [bx, by] = treeMap(T, 0, 0)
     text('PAST', bx + (T.vertical ? 0 : -20), by + (T.vertical ? 42 : 6), `600 15px ${MONO}`, rgba(WHITE, 0.55), T.vertical ? 'center' : 'right', 'alphabetic')
@@ -475,7 +490,8 @@
     const spin = t * 0.04
     D.agents.forEach((a, i) => {
       const ang = -Math.PI / 2 + i * TAU / 10 + spin
-      const s1 = out3((k - i * 0.9) / 10)
+      const sp = sc.quick ? 0.6 : 1
+      const s1 = out3((k - i * 0.9 * sp) / (10 * sp))
       if (s1 <= 0) return
       const ex = T.cx + Math.cos(ang) * T.R * T.sx, ey = T.cy + Math.sin(ang) * T.R
       const mid = [T.cx + Math.cos(ang - 0.18) * T.R * 0.5 * T.sx, T.cy + Math.sin(ang - 0.18) * T.R * 0.5]
@@ -486,7 +502,7 @@
       // where she ends up across the runs: the three likeliest industries
       const ends = Object.entries(a.ends).sort((p, q) => q[1] - p[1]).slice(0, 3)
       ends.forEach(([ind, runs], j) => {
-        const s2 = out3((k - 12 - i * 0.9 - j * 2) / 10)
+        const s2 = out3((k - (12 + i * 0.9 + j * 2) * sp) / (10 * sp))
         if (s2 <= 0) return
         const sa = ang + (j - 1) * 0.3
         const len = T.R2 * (0.55 + 0.45 * runs / 60)
