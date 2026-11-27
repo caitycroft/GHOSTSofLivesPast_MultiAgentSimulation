@@ -2,12 +2,12 @@
 // simulation, cut to her voiceover word by word. Voice first: every cut point
 // is a word in the take (media/thanksgiving/vo_<V>.json from thanksgiving_vo.mjs).
 //
-//   node scripts/thanksgiving_cut.mjs --version A
+//   node scripts/thanksgiving_cut.mjs --version A [--aspect 16x9]
 //   node scripts/thanksgiving_cut.mjs --version A --music track.m4a --music-at 156
 //
 // --music-at is the moment in the track (seconds) that lands on the cut into the
 // ghosts' arcade world ("In Stockholm..."): in her edit, the synth at 2:36.
-// Writes media/thanksgiving/cuts/GLP_Thanksgiving_<V>_9x16.mp4 and .srt.
+// Writes media/thanksgiving/cuts/GLP_Thanksgiving_<V>_<aspect>.mp4 and .srt.
 //
 // Three passes: the background (simulation plates, dimmed under a photo),
 // the photo cards (rendered frame by frame in Chromium, with alpha), then
@@ -33,7 +33,14 @@ const FOOT = `${ROOT}/media/thanksgiving/footage`
 const WORK = `${ROOT}/media/thanksgiving/.work`
 const OUT = `${ROOT}/media/thanksgiving/cuts`
 const FPS = 30
-const W = 1080, H = 1920
+const ASPECT = arg('aspect', '9x16')
+const [W, H] = ASPECT === '16x9' ? [1920, 1080] : [1080, 1920]
+// Where things sit. Vertical: windows above the captions and left of the app
+// icons; captions in the same safe band as the other films. Horizontal: windows
+// in the upper frame, captions in the lower third.
+const LAY = ASPECT === '16x9'
+  ? { box: { cx: 960, cy: 450, w: 1300, h: 700 }, cap: 46, mL: 260, mR: 260, mV: 105, hook: 76, hookPos: [960, 540], hookWrap: 30, title: [960, 380], sub: [960, 500], cx: 960 }
+  : { box: { cx: 520, cy: 690, w: 840, h: 860 }, cap: 52, mL: 80, mR: 170, mV: 560, hook: 84, hookPos: [495, 820], hookWrap: 17, title: [495, 450], sub: [495, 610], cx: 495 }
 mkdirSync(`${WORK}/cards`, { recursive: true })
 mkdirSync(OUT, { recursive: true })
 
@@ -54,9 +61,15 @@ const LEAD = 0.08 // the picture changes a hair before the word
 const cut = (t) => +(t - LEAD).toFixed(3)
 
 // ------------------------------------------------------------------ edit
+const dims = (photo) => execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', `${FOOT}/${photo}.jpg`]).toString().trim().split(',').map(Number)
 const P = (shot, inn, since) => ({ shot, inn, since }) // plate: shot, its in point at time `since`
 const win = (photo, o = {}) => ({ kind: 'win', photo, look: o.look ?? 'classic', label: o.label ?? '', sub: o.sub ?? '', hard: !!o.hard, pan: !!o.pan, size: o.size ?? null })
-const full = (photo, o = {}) => ({ kind: 'full', photo, fit: o.fit ?? 'cover', pos: o.pos ?? '50% 50%' })
+// a full frame photo fills the frame when its shape is close to the frame's, and otherwise sits whole on a blurred copy of itself
+const full = (photo, o = {}) => {
+  const [w, h] = dims(photo)
+  const r = (w / h) / (W / H)
+  return { kind: 'full', photo, fit: r < 1.4 && r > 1 / 1.4 ? 'cover' : 'contain', pos: o.pos ?? '50% 50%' }
+}
 
 const beats = []
 const at = (t0, b) => beats.push({ t0: Math.max(0, t0), ...b })
@@ -126,7 +139,7 @@ at(tBack, { bg: P('c_timeline', 5, tBack) })
 at(cut(word(bkRe, 'but')), { card: full('sf_run_golden_gate_dusk') })
 
 // "Happy Thanksgiving, from all of me." and the end card
-at(cut(line(/^Happy Thanksgiving/).voiceStart), { card: full('highcoast_rock_dusk_all_yours', { fit: 'contain' }) })
+at(cut(line(/^Happy Thanksgiving/).voiceStart), { card: full('highcoast_rock_dusk_all_yours', { pos: '62% 50%' }) })
 
 beats.sort((a, b) => a.t0 - b.t0)
 beats.forEach((b, i) => {
@@ -137,9 +150,7 @@ beats.forEach((b, i) => {
 })
 
 // ------------------------------------------------------------------ cards
-const dims = (photo) => execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', `${FOOT}/${photo}.jpg`]).toString().trim().split(',').map(Number)
-// windows sit in a box above the captions and left of the app icons
-const BOX = { cx: 520, cy: 690, w: 840, h: 860 }
+const BOX = LAY.box
 function rect(card) {
   let ww, wh
   if (card.size) [ww, wh] = card.size
@@ -196,7 +207,7 @@ function clipOf(card) {
   return { x, y, width: Math.min(W, r.x + r.w + 90) - x, height: Math.min(H, r.y + r.h + 110) - y }
 }
 
-const key = (card, n) => `${card.kind}_${card.photo}_${card.look ?? card.fit}_${card.hard ? 'h' : 's'}_${n}`.replace(/[^\w-]/g, '')
+const key = (card, n) => { const c = clipOf(card); return `${ASPECT}_${card.kind}_${card.photo}_${card.look ?? card.fit}_${card.hard ? 'h' : 's'}_${c.x}-${c.y}-${c.width}-${c.height}_${n}`.replace(/[^\w-]/g, '') }
 
 async function renderCards() {
   const jobs = beats.filter((b) => b.card).map((b) => ({ b, n: Math.ceil((b.n + 2) / 4) * 4 }))
@@ -237,7 +248,7 @@ function renderBackground(file) {
       return
     }
     const inn = b.bg.inn + (b.t0 - b.bg.since)
-    inputs.push('-ss', inn.toFixed(3), '-i', `${ROOT}/media/shots/9x16/${b.bg.shot}.mp4`)
+    inputs.push('-ss', inn.toFixed(3), '-i', `${ROOT}/media/shots/${ASPECT}/${b.bg.shot}.mp4`)
     const dim = b.card ? ',eq=brightness=-0.16:saturation=0.65,gblur=sigma=10' : ''
     parts.push(`[${i}:v]fps=${FPS},scale=${W}:${H},tpad=stop_mode=clone:stop_duration=30,trim=end_frame=${b.n},setpts=PTS-STARTPTS,format=yuv420p${dim}[s${i}]`)
   })
@@ -296,9 +307,9 @@ const END_T0 = +(caps[caps.length - 1].voiceEnd + 0.45).toFixed(2)
 function writeCaptions(assFile, srtFile) {
   let ass = `[Script Info]\nScriptType: v4.00+\nPlayResX: ${W}\nPlayResY: ${H}\nWrapStyle: 0\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n`
   ass += [
-    style('Box', 52, C.clear, C.box, C.box, true, 3, 18, 0, 2, 80, 170, 560),
-    style('Cap', 52, C.white, '&H00000000', '&H00000000', true, 1, 0, 0, 2, 80, 170, 560),
-    style('Hook', 84, C.white, '&H40000000', '&H80000000', true, 1, 2, 3, 5, 0, 0, 0, 1),
+    style('Box', LAY.cap, C.clear, C.box, C.box, true, 3, 18, 0, 2, LAY.mL, LAY.mR, LAY.mV),
+    style('Cap', LAY.cap, C.white, '&H00000000', '&H00000000', true, 1, 0, 0, 2, LAY.mL, LAY.mR, LAY.mV),
+    style('Hook', LAY.hook, C.white, '&H40000000', '&H80000000', true, 1, 2, 3, 5, 0, 0, 0, 1),
     style('Title', 86, C.white, '&H40000000', '&H80000000', true, 1, 1, 2, 5, 0, 0, 0, 14),
     style('Sub', 34, C.amber, '&H00000000', '&H00000000', false, 1, 0, 0, 5, 0, 0, 0, 6),
   ].join('\n')
@@ -311,17 +322,17 @@ function writeCaptions(assFile, srtFile) {
       if (li === 0) {
         // the opening question, large in the middle of the frame
         const lines = []; let l = ''
-        for (const w of ch.text.split(' ')) { if ((l + ' ' + w).trim().length > 17) { lines.push(l.trim()); l = w } else l += ' ' + w }
+        for (const w of ch.text.split(' ')) { if ((l + ' ' + w).trim().length > LAY.hookWrap) { lines.push(l.trim()); l = w } else l += ' ' + w }
         lines.push(l.trim())
-        ass += `Dialogue: 1,${ts(ch.t0)},${ts(ch.t1)},Hook,,0,0,0,,{\\pos(495,820)\\fad(220,160)\\blur0.6\\q0}${esc(lines.join('\\N'))}\n`
+        ass += `Dialogue: 1,${ts(ch.t0)},${ts(ch.t1)},Hook,,0,0,0,,{\\pos(${LAY.hookPos[0]},${LAY.hookPos[1]})\\fad(220,160)\\blur0.6\\q0}${esc(lines.join('\\N'))}\n`
         continue
       }
       ass += `Dialogue: 0,${ts(ch.t0)},${ts(ch.t1)},Box,,0,0,0,,{\\fad(140,120)}${esc(ch.text)}\n`
       ass += `Dialogue: 1,${ts(ch.t0)},${ts(ch.t1)},Cap,,0,0,0,,{\\fad(140,120)}${esc(ch.text)}\n`
     }
   })
-  ass += `Dialogue: 1,${ts(END_T0)},${ts(TOTAL)},Title,,0,0,0,,{\\pos(495,450)\\fad(600,0)}GHOSTS OF\\NLIVES PAST\n`
-  ass += `Dialogue: 1,${ts(END_T0 + 0.4)},${ts(TOTAL)},Sub,,0,0,0,,{\\pos(495,610)\\fad(600,0)}@caitycroft\n`
+  ass += `Dialogue: 1,${ts(END_T0)},${ts(TOTAL)},Title,,0,0,0,,{\\pos(${LAY.title[0]},${LAY.title[1]})\\fad(600,0)}GHOSTS OF\\NLIVES PAST\n`
+  ass += `Dialogue: 1,${ts(END_T0 + 0.4)},${ts(TOTAL)},Sub,,0,0,0,,{\\pos(${LAY.sub[0]},${LAY.sub[1]})\\fad(600,0)}@caitycroft\n`
   writeFileSync(assFile, ass)
   writeFileSync(srtFile, srt)
 }
@@ -330,11 +341,11 @@ function writeCaptions(assFile, srtFile) {
 async function main() {
   console.log(`Thanksgiving ${V}: ${beats.length} beats, ${TOTAL}s`)
   await renderCards()
-  const bg = `${WORK}/bg_${V}.mp4`
+  const bg = `${WORK}/bg_${V}_${ASPECT}.mp4`
   renderBackground(bg)
-  const name = `GLP_Thanksgiving_${V}_9x16${music ? '' : '_voice-only'}`
+  const name = `GLP_Thanksgiving_${V}_${ASPECT}${music ? '' : '_voice-only'}`
   const assFile = `${WORK}/${name}.ass`
-  writeCaptions(assFile, `${OUT}/GLP_Thanksgiving_${V}_9x16.srt`)
+  writeCaptions(assFile, `${OUT}/GLP_Thanksgiving_${V}_${ASPECT}.srt`)
 
   const inputs = ['-i', bg], parts = []
   let prev = '0:v', k = 0
@@ -358,12 +369,20 @@ async function main() {
     console.log(`  music from ${(start / 60) | 0}:${(start % 60).toFixed(1).padStart(4, '0')} in the track, ${musicAt}s on the Stockholm cut at ${tSto}s`)
     inputs.push('-i', music)
     parts.push(`[${voIn}:a]aformat=sample_rates=48000:channel_layouts=stereo,apad=whole_dur=${TOTAL},asplit=2[vo][key]`)
-    parts.push(`[${voIn + 1}:a]atrim=start=${start.toFixed(3)},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,volume=-9dB,afade=t=in:d=1.2,afade=t=out:st=${(TOTAL - 2.5).toFixed(2)}:d=2.5,atrim=0:${TOTAL}[bed]`)
-    parts.push(`[bed][key]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=400[duck]`)
+    // the master is loud (about -7 LUFS), so the bed sits about 17 dB down, a little scooped where the voice lives,
+    // ducks a few dB more while she speaks, and lifts 6 dB under the end card
+    const lift = (END_T0 - 0.6).toFixed(2)
+    parts.push(`[${voIn + 1}:a]atrim=start=${start.toFixed(3)},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,equalizer=f=2500:t=q:w=1.2:g=-3,volume='pow(10,(-17+6*clip((t-${lift})/1.0,0,1))/20)':eval=frame,afade=t=in:d=0.8,afade=t=out:st=${(TOTAL - 2.2).toFixed(2)}:d=2.2,atrim=0:${TOTAL}[bed]`)
+    parts.push(`[bed][key]sidechaincompress=threshold=0.04:ratio=3:attack=15:release=350[duck]`)
     parts.push(`[vo][duck]amix=inputs=2:normalize=0,alimiter=limit=0.89[aout]`)
   } else parts.push(`[${voIn}:a]aformat=sample_rates=48000:channel_layouts=stereo,apad=whole_dur=${TOTAL}[aout]`)
   execFileSync('ffmpeg', ['-v', 'error', '-y', ...inputs, '-filter_complex', parts.join(';'), '-map', '[vout]', '-map', '[aout]', '-t', String(TOTAL),
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p', '-r', String(FPS), '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', `${OUT}/${name}.mp4`], { stdio: 'inherit' })
   console.log(`wrote media/thanksgiving/cuts/${name}.mp4`)
+  if (music) {
+    // the same picture with the voice alone, in case a platform mutes the song
+    execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', `${OUT}/${name}.mp4`, '-i', `${ROOT}/media/thanksgiving/vo_${V}.wav`, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-af', `apad=whole_dur=${TOTAL}`, '-c:a', 'aac', '-b:a', '192k', '-t', String(TOTAL), '-movflags', '+faststart', `${OUT}/${name}_voice-only.mp4`])
+    console.log(`wrote media/thanksgiving/cuts/${name}_voice-only.mp4`)
+  }
 }
 main().catch((e) => { console.error(e); process.exit(1) })
