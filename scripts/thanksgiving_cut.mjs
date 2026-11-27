@@ -374,7 +374,7 @@ async function main() {
     const lift = (END_T0 - 0.6).toFixed(2)
     parts.push(`[${voIn + 1}:a]atrim=start=${start.toFixed(3)},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,equalizer=f=2500:t=q:w=1.2:g=-3,volume='pow(10,(-17+6*clip((t-${lift})/1.0,0,1))/20)':eval=frame,afade=t=in:d=0.8,afade=t=out:st=${(TOTAL - 2.2).toFixed(2)}:d=2.2,atrim=0:${TOTAL}[bed]`)
     parts.push(`[bed][key]sidechaincompress=threshold=0.04:ratio=3:attack=15:release=350[duck]`)
-    parts.push(`[vo][duck]amix=inputs=2:normalize=0,alimiter=limit=0.89[aout]`)
+    parts.push(`[vo][duck]amix=inputs=2:normalize=0,volume=1.8dB,alimiter=limit=0.89[aout]`) // about -14 LUFS overall
   } else parts.push(`[${voIn}:a]aformat=sample_rates=48000:channel_layouts=stereo,apad=whole_dur=${TOTAL}[aout]`)
   execFileSync('ffmpeg', ['-v', 'error', '-y', ...inputs, '-filter_complex', parts.join(';'), '-map', '[vout]', '-map', '[aout]', '-t', String(TOTAL),
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p', '-r', String(FPS), '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', `${OUT}/${name}.mp4`], { stdio: 'inherit' })
