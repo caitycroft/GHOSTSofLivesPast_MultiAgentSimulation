@@ -37,7 +37,9 @@ const placed = lines.map((l, i) => {
   const sameBefore = i > 0 && lines[i - 1].file === l.file, sameAfter = i < lines.length - 1 && lines[i + 1].file === l.file
   const a = Math.max(0, l.start - PAD_IN, sameBefore ? lines[i - 1].end + 0.05 : 0)
   const b = Math.min(l.end + PAD_OUT, sameAfter ? lines[i + 1].start - 0.05 : Infinity)
-  const p = { text: l.text, file: l.file, a, b, at: t, voiceStart: +(t + (l.start - a)).toFixed(2), voiceEnd: +(t + (l.end - a)).toFixed(2) }
+  const p = { text: l.text, file: l.file, a, b, at: t, voiceStart: +(t + (l.start - a)).toFixed(2), voiceEnd: +(t + (l.end - a)).toFixed(2),
+    // each word's place in the finished track, for cuts and captions that land on a word
+    words: (l.words ?? []).map((w) => ({ w: w.w, start: +(t + (w.start - a)).toFixed(2), end: +(t + (w.end - a)).toFixed(2) })) }
   t = t + (b - a) + Math.max(0, pauseAfter(l.text, i) - PAD_OUT)
   return p
 })
@@ -55,7 +57,7 @@ const parts = placed.map((p, i) => `[${files.indexOf(p.file)}:a]atrim=${p.a.toFi
 const mix = `${placed.map((_, i) => `[l${i}]`).join('')}amix=inputs=${placed.length}:normalize=0:dropout_transition=0,asetpts=N/SR/TB,apad=whole_dur=${total},atrim=0:${total},loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[vo]`
 execFileSync('ffmpeg', ['-v', 'error', '-y', ...files.flatMap((f) => ['-i', f]), '-filter_complex', [...parts, mix].join(';'), '-map', '[vo]', '-c:a', 'pcm_s16le', `${out}.wav`])
 // captions: each line shows from just before its first word until just before the next line
-const captions = placed.map((p, i) => ({ text: p.text, t0: +Math.max(0, p.voiceStart - 0.15).toFixed(2), t1: +(i < placed.length - 1 ? placed[i + 1].voiceStart - 0.27 : p.voiceEnd + 1.2).toFixed(2), voiceStart: p.voiceStart, voiceEnd: p.voiceEnd }))
+const captions = placed.map((p, i) => ({ text: p.text, t0: +Math.max(0, p.voiceStart - 0.15).toFixed(2), t1: +(i < placed.length - 1 ? placed[i + 1].voiceStart - 0.27 : p.voiceEnd + 1.2).toFixed(2), voiceStart: p.voiceStart, voiceEnd: p.voiceEnd, words: p.words }))
 writeFileSync(`${out}.json`, JSON.stringify({ seconds: total, levelledFrom: lufs, captions }, null, 1))
 console.log(`wrote ${out}.wav (${total}s, from ${lufs} LUFS to -14) and ${out}.json`)
 for (const c of captions) console.log(`  ${c.t0.toFixed(2).padStart(6)} to ${c.t1.toFixed(2).padStart(6)}  ${c.text}`)

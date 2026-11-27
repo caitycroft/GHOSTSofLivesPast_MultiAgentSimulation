@@ -31,6 +31,7 @@ if len(segs) != sum(map(len, lines)):
 res, k = [], 0
 for i, l in enumerate(lines):
     ws = segs[k:k + len(l)]; k += len(l)
-    res.append({'text': cut['lines'][i]['text'], 'start': round(ws[0][1], 2), 'end': round(ws[-1][2], 2)})
+    res.append({'text': cut['lines'][i]['text'], 'start': round(ws[0][1], 2), 'end': round(ws[-1][2], 2),
+                'words': [{'w': w, 'start': round(a, 2), 'end': round(b, 2)} for w, a, b in ws]})
 json.dump(res, open(out, 'w'), indent=1)
 print(f'aligned {len(segs)} words in {len(res)} lines -> {out}')
