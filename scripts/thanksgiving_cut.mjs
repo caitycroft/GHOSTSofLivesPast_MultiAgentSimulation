@@ -122,7 +122,7 @@ at(tRoads, { bg: threads, card: win('shanghai_heart_wishes_tunnel') })
 // "We can't go back. But we can say thank you, and choose where we go next."
 const bkRe = /^We can.t go back/
 const tBack = cut(line(bkRe).voiceStart)
-at(tBack, { bg: P('c_globe_follow', 6, tBack) })
+at(tBack, { bg: P('c_timeline', 5, tBack) })
 at(cut(word(bkRe, 'but')), { card: full('sf_run_golden_gate_dusk') })
 
 // "Happy Thanksgiving, from all of me." and the end card
@@ -206,8 +206,11 @@ async function renderCards() {
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 })
   for (const { b, n } of todo) {
     const file = `${WORK}/cards/${key(b.card, n)}.mov`
-    await page.setContent(cardHtml(b.card), { waitUntil: 'load' })
-    await page.evaluate(() => document.fonts.ready)
+    // a file page, so the photo (a local file) is allowed to load
+    writeFileSync(`${WORK}/card.html`, cardHtml(b.card))
+    await page.goto(`file://${WORK}/card.html`, { waitUntil: 'load' })
+    await page.evaluate(() => Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.decode())]))
+    if (await page.evaluate(() => [...document.images].some((i) => !i.naturalWidth))) throw new Error(`photo did not load: ${b.card.photo}`)
     const clip = clipOf(b.card)
     const ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'png', '-i', '-', '-c:v', 'png', '-pix_fmt', 'rgba', file], { stdio: ['pipe', 'inherit', 'inherit'] })
     const fin = b.card.hard ? 0 : 5, fout = b.card.hard ? 0 : 4
@@ -235,7 +238,7 @@ function renderBackground(file) {
     }
     const inn = b.bg.inn + (b.t0 - b.bg.since)
     inputs.push('-ss', inn.toFixed(3), '-i', `${ROOT}/media/shots/9x16/${b.bg.shot}.mp4`)
-    const dim = b.card ? ',eq=brightness=-0.09:saturation=0.75,gblur=sigma=3' : ''
+    const dim = b.card ? ',eq=brightness=-0.16:saturation=0.65,gblur=sigma=10' : ''
     parts.push(`[${i}:v]fps=${FPS},scale=${W}:${H},tpad=stop_mode=clone:stop_duration=30,trim=end_frame=${b.n},setpts=PTS-STARTPTS,format=yuv420p${dim}[s${i}]`)
   })
   parts.push(`${beats.map((_, i) => `[s${i}]`).join('')}concat=n=${beats.length}:v=1:a=0[bg]`)
@@ -250,22 +253,41 @@ const ts = (t) => { const cs = Math.max(0, Math.round(t * 100)); return `${Math.
 const srtTs = (t) => { const ms = Math.max(0, Math.round(t * 1000)); return `${String(Math.floor(ms / 3600000)).padStart(2, '0')}:${String(Math.floor((ms % 3600000) / 60000)).padStart(2, '0')}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')},${String(ms % 1000).padStart(3, '0')}` }
 const esc = (s) => s.replace(/\{/g, '(').replace(/\}/g, ')')
 
-// each line in short phrases, timed by its words, so no caption runs past two lines
+// each line in short phrases, timed by its words, so no caption runs past two
+// lines: split at punctuation, then split a long piece near its middle, before
+// a joining word where there is one ("who you'd be / if you'd made...")
+const MAXC = 40
+const JOIN = new Set(['who', 'if', 'and', 'but', 'in', 'to', 'where', 'about', 'by', 'from', 'that', 'for', 'with', 'instead', 'staying', 'building'])
+function split(idx, toks) {
+  const len = (a, b) => toks.slice(a, b).join(' ').length
+  if (len(idx[0], idx[1]) <= MAXC || idx[1] - idx[0] < 3) return [idx]
+  const mid = len(idx[0], idx[1]) / 2
+  let best = null
+  for (let k = idx[0] + 1; k < idx[1]; k++) {
+    const score = Math.abs(len(idx[0], k) - mid) - (JOIN.has(toks[k].toLowerCase().replace(/[^a-z']/g, '')) ? 8 : 0)
+    if (best == null || score < best[1]) best = [k, score]
+  }
+  return [...split([idx[0], best[0]], toks), ...split([best[0], idx[1]], toks)]
+}
 function chunks(c, next0) {
   const toks = c.text.split(/\s+/)
   const ws = c.words ?? []
-  if (ws.length !== toks.filter((t) => /[A-Za-z]/.test(t)).length) return [{ text: c.text, t0: c.t0, t1: c.t1 }]
-  const out = []
-  let cur = [], wi = 0, start = null
-  toks.forEach((tok, i) => {
-    const w = /[A-Za-z]/.test(tok) ? ws[wi++] : null
-    if (start == null && w) start = w.start
-    cur.push(tok)
-    const text = cur.join(' ')
-    const nextTok = toks[i + 1]
-    const brk = !nextTok || (/[.,?!]$/.test(tok) && text.length >= 12) || (text.length + 1 + nextTok.length > 34)
-    if (brk) { out.push({ text, t0: start - 0.12 }); cur = []; start = null }
-  })
+  const wordAt = []
+  let wi = 0
+  toks.forEach((t, i) => { wordAt[i] = /[A-Za-z]/.test(t) ? ws[wi++] : null })
+  if (wi !== ws.length || ws.length === 0) return [{ text: c.text, t0: c.t0, t1: Math.min(c.t1, next0 ?? Infinity) }]
+  const pieces = []
+  let from = 0
+  toks.forEach((t, i) => { if (/[.,?!]$/.test(t) || i === toks.length - 1) { pieces.push([from, i + 1]); from = i + 1 } })
+  const parts = pieces.flatMap((p) => split(p, toks))
+  // a very short piece rides with its neighbour
+  const merged = []
+  for (const p of parts) {
+    const prev = merged[merged.length - 1]
+    if (prev && (toks.slice(p[0], p[1]).join(' ').length < 10 || toks.slice(prev[0], prev[1]).join(' ').length < 10) && toks.slice(prev[0], p[1]).join(' ').length <= MAXC) prev[1] = p[1]
+    else merged.push([...p])
+  }
+  const out = merged.map(([a, b]) => ({ text: toks.slice(a, b).join(' '), t0: (wordAt.slice(a, b).find(Boolean)?.start ?? c.t0) - 0.12 }))
   out.forEach((o, i) => { o.t1 = i < out.length - 1 ? out[i + 1].t0 - 0.06 : Math.min(c.t1, next0 ?? Infinity) })
   return out
 }
