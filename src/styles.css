@@ -487,6 +487,8 @@ tr.shared { opacity: 0.5; }
 
 /* clean plates for video: no chorus, no labels that captions would collide with */
 .clean .chorus, .clean .top, .clean .selves-bar, .clean .bottom { display: none; }
+/* plates for video art: the world without its place cards (?nocards=1) */
+.nocards .popup-anchor, .nocards .city-card, .nocards .city-banner { display: none; }
 .clean.view-timeline .layer.scroll, .clean.view-how .layer.scroll, .clean.view-cards .layer.scroll, .clean.view-dash .layer.scroll { padding-top: 60px; }
 .clean.portrait .layer.scroll { padding: 300px 70px 560px 70px; }
 .clean.portrait .how-cols { grid-template-columns: 1fr; }

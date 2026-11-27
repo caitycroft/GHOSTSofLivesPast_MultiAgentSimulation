@@ -203,7 +203,7 @@ export default function App() {
   const spatial = view === 'globe' || view === 'city' || view === 'loom'
 
   return (
-    <div className={`app view-${view} style-${style}` + (style === 'void' ? ' void' : '') + (cinema ? ' cinema' : '') + (portrait ? ' portrait' : '') + (params.get('clean') === '1' ? ' clean' : '')}>
+    <div className={`app view-${view} style-${style}` + (style === 'void' ? ' void' : '') + (cinema ? ' cinema' : '') + (portrait ? ' portrait' : '') + (params.get('clean') === '1' ? ' clean' : '') + (params.get('nocards') === '1' ? ' nocards' : '')}>
       <div className="stage">
         <div className="layer" style={{ visibility: view === 'globe' ? 'visible' : 'hidden' }}>
           <GlobeView sim={sim} weather={weather} land={land} live={live} mode={mode} focusId={focusId} active={view === 'globe'} onSelect={select} style={style} />

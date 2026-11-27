@@ -43,6 +43,11 @@ export const SHOTS = {
   c_outro: { url: base('cyanotype', 'globe', '&mode=orbit&nobuild=1'), duration: 10.5, steps: [[0, clock(2029.4, 0.6)]] },
 }
 
+// Plates for the Thanksgiving video art: the same moves without the place cards
+for (const id of ['c_globe_follow', 'a_globe_tour', 'c_globe_tour', 'c_outro', 'a_dio_sto', 'a_dio_ghost']) {
+  SHOTS[id + '_plate'] = { ...SHOTS[id], url: SHOTS[id].url + '&nocards=1' }
+}
+
 export const ASPECTS = {
   '16x9': { width: 1920, height: 1080 },
   '9x16': { width: 1080, height: 1920 },
