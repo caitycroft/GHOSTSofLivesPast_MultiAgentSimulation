@@ -39,7 +39,7 @@ const [W, H] = ASPECT === '16x9' ? [1920, 1080] : [1080, 1920]
 // icons; captions in the same safe band as the other films. Horizontal: windows
 // in the upper frame, captions in the lower third.
 const LAY = ASPECT === '16x9'
-  ? { box: { cx: 960, cy: 450, w: 1300, h: 700 }, cap: 46, mL: 260, mR: 260, mV: 105, hook: 76, hookPos: [960, 540], hookWrap: 30, title: [960, 380], sub: [960, 500], cx: 960 }
+  ? { box: { cx: 960, cy: 450, w: 1300, h: 700 }, cap: 46, mL: 260, mR: 260, mV: 105, hook: 76, hookPos: [960, 540], hookWrap: 30, title: [540, 300], sub: [540, 405], cx: 960 } // end title in the open sky, left of her on the rock
   : { box: { cx: 520, cy: 690, w: 840, h: 860 }, cap: 52, mL: 80, mR: 170, mV: 560, hook: 84, hookPos: [495, 820], hookWrap: 17, title: [495, 450], sub: [495, 610], cx: 495 }
 mkdirSync(`${WORK}/cards`, { recursive: true })
 mkdirSync(OUT, { recursive: true })
