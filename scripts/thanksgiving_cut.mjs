@@ -88,7 +88,7 @@ const L = VERT
       ring: { cx: 960, cy: 470, rx: 650, ry: 330, tr: 64, fs: 18 }, ringGlobe: { x: 960, y: 470, r: 232 },
       race: { vertical: false, cy: 470, hh: 400, x0: 80, x1: 1840 }, raceTag: [60, 150],
       now: [80, 70], tagTop: 0, tagBot: 0,
-      hook: 70, hookPos: [960, 902], hookWrap: 34, cap: 46, mL: 260, mR: 260, mV: 105, title: [540, 300], sub: [540, 405],
+      hook: 70, hookPos: [960, 902], hookWrap: 40, cap: 46, mL: 260, mR: 260, mV: 105, title: [540, 300], sub: [540, 405],
     }
 
 // ------------------------------------------------------------------ places and agents
