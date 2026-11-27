@@ -48,6 +48,19 @@ for (const id of ['c_globe_follow', 'a_globe_tour', 'c_globe_tour', 'c_outro', '
   SHOTS[id + '_plate'] = { ...SHOTS[id], url: SHOTS[id].url + '&nocards=1' }
 }
 
+// More of the simulation for the Thanksgiving video art: the arcade map, the
+// split doorway between two selves, the arcade data, and the ghosts' own streets
+const pick = (half, id) => (p) => p.locator('.split section.half').nth(half).locator('select').selectOption(id)
+Object.assign(SHOTS, {
+  a_loom: { url: base('arcade', 'loom'), duration: 6, steps: [[0, clock(2012, 1.8)]] },
+  a_split: { url: base('arcade', 'split'), duration: 6, steps: [[0, clock(2016, 1.2)], [0, pick(1, 'sto')], [3, pick(1, 'ber')]] },
+  c_split: { url: base('cyanotype', 'split'), duration: 6, steps: [[0, clock(2019, 1.2)], [0, pick(1, 'sha')], [3, pick(1, 'nyc')]] },
+  a_dash: { url: base('arcade', 'dash'), duration: 7, steps: [[0, clock(2021, 0, false)], [1.2, scrollTo('.layer.scroll', 560)], [2.5, hover('.heat-row:nth-child(5) .cell:nth-child(13)')], [4.5, hover('.heat-row:nth-child(8) .cell:nth-child(16)')]] },
+  a_city_sha: { url: base('arcade', 'city', '&mode=follow&focus=sha&nocards=1'), duration: 6, steps: [[0, clock(2026.2, 0.4)], [0, focus('sha')]] },
+  a_city_osl: { url: base('arcade', 'city', '&mode=follow&focus=osl&nocards=1'), duration: 6, steps: [[0, clock(2026.4, 0.4)], [0, focus('osl')]] },
+  a_city_nyc: { url: base('arcade', 'city', '&mode=follow&focus=nyc&nocards=1'), duration: 6, steps: [[0, clock(2026.1, 0.4)], [0, focus('nyc')]] },
+})
+
 export const ASPECTS = {
   '16x9': { width: 1920, height: 1080 },
   '9x16': { width: 1080, height: 1920 },
